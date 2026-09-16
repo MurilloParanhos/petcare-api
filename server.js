@@ -2,11 +2,14 @@ const express = require('express');
 const pool = require('./config/db');
 const usuarioRoutes = require('./routes/usuarioRoutes');
 const clienteRoutes = require('./routes/clienteRoutes');
+const animalRoutes = require('./routes/animalRoutes');
 
 const app = express();
 app.use(express.json());
 app.use('/api', usuarioRoutes);
 app.use('/api', clienteRoutes);
+app.use('/api', animalRoutes);
+
 
 const PORT = 3000;
 
