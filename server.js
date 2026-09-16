@@ -6,6 +6,7 @@ const animalRoutes = require('./routes/animalRoutes');
 
 const app = express();
 app.use(express.json());
+app.use(express.static('public'));
 app.use('/api', usuarioRoutes);
 app.use('/api', clienteRoutes);
 app.use('/api', animalRoutes);

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>PetCare - Login</title>
+</head>
+<body>
+    <h1>PetCare - Login</h1>
+
+    <form id="formLogin">
+        <label for="email">Email:</label>
+        <input type="email" id="email" required>
+
+        <label for="senha">Senha:</label>
+        <input type="password" id="senha" required>
+
+        <button type="submit">Entrar</button>
+    </form>
+
+    <p id="mensagemErro" style="color: red;"></p>
+        <script>
+        const formLogin = document.getElementById('formLogin');
+        const mensagemErro = document.getElementById('mensagemErro');
+
+        formLogin.addEventListener('submit', async (evento) => {
+            evento.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+
+            try {
+                const resposta = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+
+                const dados = await resposta.json();
+
+                if (!resposta.ok) {
+                    mensagemErro.textContent = dados.erro;
+                    return;
+                }
+
+                localStorage.setItem('token', dados.token);
+                window.location.href = 'dashboard.html';
+
+            } catch (erro) {
+                console.error(erro);
+                mensagemErro.textContent = 'Erro ao conectar com o servidor.';
+            }
+        });
+    </script>
+    
+</body>
+</html>
