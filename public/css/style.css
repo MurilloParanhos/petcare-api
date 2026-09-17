@@ -169,3 +169,149 @@ th {
 .btn-excluir {
     background-color: #a83232;
 }
+
+/* ===== LOGIN ===== */
+
+.login-container {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+.login-lado-esquerdo {
+    flex: 1;
+    background-image: url('../img/Dog.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-color: #1f3d2c;
+    background-position: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40px 40px 60px 40px;
+    color: white;
+}
+
+.login-logo span {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.login-frase h1 {
+    font-size: 28px;
+    margin-bottom: 15px;
+}
+
+.login-frase h1 span {
+    color: #8fd694;
+}
+
+.login-frase p {
+    font-size: 14px;
+    max-width: 320px;
+}
+
+.login-lado-direito {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.login-logo-direita span {
+    font-size: 28px;
+    font-weight: bold;
+    color: #1f3d2c;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.login-lado-direito h2 {
+    color: #1f3d2c;
+    margin-bottom: 5px;
+}
+
+.login-lado-direito > p {
+    color: #666;
+    margin-bottom: 25px;
+}
+
+#formLogin {
+    width: 100%;
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#formLogin input {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+#formLogin button {
+    padding: 12px;
+    background-color: #1f3d2c;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+#formLogin button:hover {
+    background-color: #2e5940;
+}
+
+.campo-com-icone {
+    position: relative;
+}
+
+.campo-com-icone i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+}
+
+#formLogin .campo-com-icone input {
+    width: 100%;
+    padding-left: 36px;
+}
+
+.login-opcoes {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+}
+
+.lembrar-usuario {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #555;
+    cursor: pointer;
+}
+
+.esqueceu-senha {
+    color: #1f3d2c;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.esqueceu-senha:hover {
+    text-decoration: underline;
+}
+
+#toggleSenha {
+    left: auto;
+    right: 12px;
+    cursor: pointer;
+    pointer-events: auto;
+}

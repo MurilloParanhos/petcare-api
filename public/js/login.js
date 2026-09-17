@@ -29,3 +29,18 @@ formLogin.addEventListener('submit', async (evento) => {
         mensagemErro.textContent = 'Erro ao conectar com o servidor.';
     }
 });
+
+const toggleSenha = document.getElementById('toggleSenha');
+const campoSenha = document.getElementById('senha');
+
+toggleSenha.addEventListener('click', () => {
+    if (campoSenha.type === 'password') {
+        campoSenha.type = 'text';
+        toggleSenha.classList.remove('fa-eye');
+        toggleSenha.classList.add('fa-eye-slash');
+    } else {
+        campoSenha.type = 'password';
+        toggleSenha.classList.remove('fa-eye-slash');
+        toggleSenha.classList.add('fa-eye');
+    }
+});

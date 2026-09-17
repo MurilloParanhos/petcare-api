@@ -3,22 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <title>PetCare - Login</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    <h1>PetCare - Login</h1>
+  <div class="login-container">
 
-    <form id="formLogin">
-        <label for="email">Email:</label>
-        <input type="email" id="email" required>
+    <div class="login-lado-esquerdo">
+      <div class="login-logo">
+        <span>PetCare</span>
+      </div>
+      <div class="login-frase">
+        <h1>Cuidando de quem sempre <span>está ao seu lado.</span></h1>
+        <p>Juntos por mais saúde, bem-estar e qualidade de vida para os pets.</p>
+      </div>
+    </div>
 
-        <label for="senha">Senha:</label>
-        <input type="password" id="senha" required>
+    <div class="login-lado-direito">
+      <div class="login-logo-direita">
+        <span>PetCare</span>
+      </div>
+      <h2>Bem-vindo(a)!</h2>
+      <p>Acesse sua conta para continuar.</p>
+
+      <form id="formLogin">
+        <div class="campo-com-icone">
+    <i class="fa-solid fa-user"></i>
+    <input type="email" id="email" placeholder="Usuário" required>
+</div>
+
+<div class="campo-com-icone">
+    <i class="fa-solid fa-lock"></i>
+    <input type="password" id="senha" placeholder="Senha" required>
+    <i class="fa-solid fa-eye" id="toggleSenha"></i>
+</div>
+
+<div class="login-opcoes">
+    <label class="lembrar-usuario">
+        <input type="checkbox" id="lembrarUsuario">
+        Lembrar meu usuário
+    </label>
+    <a href="#" class="esqueceu-senha">Esqueceu sua senha?</a>
+</div>
 
         <button type="submit">Entrar</button>
-    </form>
+      </form>
 
-    <p id="mensagemErro" style="color: red;"></p>
+      <p id="mensagemErro" style="color: red;"></p>
+    </div>
 
-    <script src="js/login.js"></script>
+  </div>
+
+  <script src="js/login.js"></script>
 </body>
 </html>
