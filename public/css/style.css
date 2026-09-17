@@ -1,0 +1,171 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f4f6f5;
+}
+
+.sidebar {
+    width: 220px;
+    background-color: #1f3d2c;
+    color: white;
+    padding: 20px;
+}
+
+.sidebar h2 {
+    margin-bottom: 30px;
+    font-size: 20px;
+}
+
+.sidebar nav ul {
+    list-style: none;
+}
+
+.sidebar nav ul li {
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.sidebar nav ul li.ativo {
+    background-color: #2e5940;
+    font-weight: bold;
+}
+
+.conteudo {
+    flex: 1;
+    padding: 30px;
+}
+
+.conteudo h1 {
+    margin-bottom: 5px;
+}
+
+.cards {
+    display: flex;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    flex: 1;
+}
+
+.card h3 {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.card p {
+    font-size: 28px;
+    font-weight: bold;
+    color: #1f3d2c;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+th, td {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background-color: #f0f0f0;
+}
+
+.formulario {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.formulario div {
+    display: flex;
+    flex-direction: column;
+}
+
+.formulario label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.formulario input, .formulario select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.formulario button {
+    padding: 9px 16px;
+    background-color: #1f3d2c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.erro {
+    color: #a83232;
+    font-size: 13px;
+    width: 100%;
+    margin-top: -5px;
+}
+
+#btnSair {
+    margin-top: 30px;
+    width: 100%;
+    padding: 10px;
+    background-color: #a83232;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
+
+.btn-editar, .btn-excluir {
+    padding: 6px 10px;
+    font-size: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 4px;
+    color: white;
+}
+
+.btn-editar {
+    background-color: #2e5940;
+}
+
+.btn-excluir {
+    background-color: #a83232;
+}

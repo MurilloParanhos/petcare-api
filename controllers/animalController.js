@@ -37,6 +37,46 @@ async function listarAnimais(req, res) {
     }
 }
 
-module.exports = { criarAnimal, listarAnimais};
+async function atualizarAnimais(req, res) {
+    const { id } = req.params;
+    const { nome, especie, raca, idade, cliente_id } = req.body;
+
+    try {
+        const resultado = await pool.query(
+            'UPDATE animais SET nome = $1, especie = $2, raca = $3, idade = $4, cliente_id = $5 WHERE id = $6 RETURNING *',
+            [nome, especie, raca, idade, cliente_id, id]
+        );
+
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ erro: 'Animal não encontrado' });
+        }
+
+        res.json(resultado.rows[0]);
+    } catch (erro) {
+        console.error(erro);
+        res.status(500).json({ erro: 'Erro ao atualizar animal' });
+    }
+}
+
+async function deletarAnimais(req, res) {
+    const { id }= req.params
+
+    try {
+        const resultado = await pool.query('DELETE FROM animais WHERE id = $1 RETURNING *', [id]);
+
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ erro: 'Animal não encontrado'});
+
+        }
+
+        res.json({ mensagem: 'Animal removido com sucesso'});
+    }   catch (erro) {
+        console.error(erro);
+        res.status(500).json({ erro: 'Erro ao deletar o animal'});
+    }
+    
+}
+
+module.exports = { criarAnimal, listarAnimais, atualizarAnimais, deletarAnimais};
 
   

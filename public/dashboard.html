@@ -3,150 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>PetCare - Dashboard</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-
-        body {
-            display: flex;
-            min-height: 100vh;
-            background-color: #f4f6f5;
-        }
-
-        .sidebar {
-            width: 220px;
-            background-color: #1f3d2c;
-            color: white;
-            padding: 20px;
-        }
-
-        .sidebar h2 {
-            margin-bottom: 30px;
-            font-size: 20px;
-        }
-
-        .sidebar nav ul {
-            list-style: none;
-        }
-
-        .sidebar nav ul li {
-            padding: 10px;
-            margin-bottom: 5px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .sidebar nav ul li.ativo {
-            background-color: #2e5940;
-            font-weight: bold;
-        }
-
-        .conteudo {
-            flex: 1;
-            padding: 30px;
-        }
-
-        .conteudo h1 {
-            margin-bottom: 5px;
-        }
-
-        .cards {
-            display: flex;
-            gap: 20px;
-            margin: 20px 0;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-            flex: 1;
-        }
-
-        .card h3 {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 8px;
-        }
-
-        .card p {
-            font-size: 28px;
-            font-weight: bold;
-            color: #1f3d2c;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        th, td {
-            text-align: left;
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-        }
-
-        th {
-            background-color: #f0f0f0;
-        }
-
-        .formulario {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: flex-end;
-        }
-
-        .formulario div {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .formulario label {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-
-        .formulario input, .formulario select {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        .formulario button {
-            padding: 9px 16px;
-            background-color: #1f3d2c;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        #btnSair {
-            margin-top: 30px;
-            width: 100%;
-            padding: 10px;
-            background-color: #a83232;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -154,226 +11,107 @@
         <h2>🐾 PetCare</h2>
         <nav>
             <ul>
-                <li class="ativo">Dashboard</li>
-                <li>Clientes</li>
-                <li>Animais</li>
+                <li class="ativo" data-view="viewDashboard">Dashboard</li>
+                <li data-view="viewClientes">Clientes</li>
+                <li data-view="viewAnimais">Animais</li>
             </ul>
         </nav>
         <button id="btnSair">Sair</button>
     </aside>
 
     <main class="conteudo">
-        <h1>Olá!</h1>
-        <p>Aqui está um resumo do sistema.</p>
 
-        <section class="cards">
-            <div class="card">
-                <h3>Clientes cadastrados</h3>
-                <p id="totalClientes">-</p>
-            </div>
-            <div class="card">
-                <h3>Animais cadastrados</h3>
-                <p id="totalAnimais">-</p>
-            </div>
-        </section>
+        <div id="viewDashboard" class="view">
+            <h1>Olá!</h1>
+            <p>Aqui está um resumo do sistema.</p>
 
-        <h2>Clientes</h2>
-        <table id="tabelaClientes">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Telefone</th>
-                    <th>Email</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+            <section class="cards">
+                <div class="card">
+                    <h3>Clientes cadastrados</h3>
+                    <p id="totalClientes">-</p>
+                </div>
+                <div class="card">
+                    <h3>Animais cadastrados</h3>
+                    <p id="totalAnimais">-</p>
+                </div>
+            </section>
+        </div>
 
-        <form id="formCliente" class="formulario">
-            <div>
-                <label for="clienteNome">Nome</label>
-                <input type="text" id="clienteNome" required>
-            </div>
-            <div>
-                <label for="clienteTelefone">Telefone</label>
-                <input type="text" id="clienteTelefone">
-            </div>
-            <div>
-                <label for="clienteEmail">Email</label>
-                <input type="email" id="clienteEmail">
-            </div>
-            <button type="submit">Adicionar cliente</button>
-        </form>
+        <div id="viewClientes" class="view hidden">
+            <h2>Clientes</h2>
+            <table id="tabelaClientes">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Telefone</th>
+                        <th>Email</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
 
-        <h2>Animais</h2>
-        <table id="tabelaAnimais">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Espécie</th>
-                    <th>Raça</th>
-                    <th>Idade</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+            <form id="formCliente" class="formulario">
+                <div>
+                    <label for="clienteNome">Nome</label>
+                    <input type="text" id="clienteNome">
+                </div>
+                <div>
+                    <label for="clienteTelefone">Telefone</label>
+                    <input type="text" id="clienteTelefone">
+                </div>
+                <div>
+                    <label for="clienteEmail">Email</label>
+                    <input type="email" id="clienteEmail">
+                </div>
+                <button type="submit" id="btnSalvarCliente">Adicionar cliente</button>
+                <p id="msgCliente" class="erro"></p>
+            </form>
+        </div>
 
-        <form id="formAnimal" class="formulario">
-            <div>
-                <label for="animalNome">Nome</label>
-                <input type="text" id="animalNome" required>
-            </div>
-            <div>
-                <label for="animalEspecie">Espécie</label>
-                <input type="text" id="animalEspecie" required>
-            </div>
-            <div>
-                <label for="animalRaca">Raça</label>
-                <input type="text" id="animalRaca">
-            </div>
-            <div>
-                <label for="animalIdade">Idade</label>
-                <input type="number" id="animalIdade">
-            </div>
-            <div>
-                <label for="animalCliente">Dono</label>
-                <select id="animalCliente" required></select>
-            </div>
-            <button type="submit">Adicionar animal</button>
-        </form>
+        <div id="viewAnimais" class="view hidden">
+            <h2>Animais</h2>
+            <table id="tabelaAnimais">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Espécie</th>
+                        <th>Raça</th>
+                        <th>Idade</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <form id="formAnimal" class="formulario">
+                <div>
+                    <label for="animalNome">Nome</label>
+                    <input type="text" id="animalNome">
+                </div>
+                <div>
+                    <label for="animalEspecie">Espécie</label>
+                    <input type="text" id="animalEspecie">
+                </div>
+                <div>
+                    <label for="animalRaca">Raça</label>
+                    <input type="text" id="animalRaca">
+                </div>
+                <div>
+                    <label for="animalIdade">Idade</label>
+                    <input type="number" id="animalIdade">
+                </div>
+                <div>
+                    <label for="animalCliente">Dono</label>
+                    <select id="animalCliente"></select>
+                </div>
+                <button type="submit" id="btnSalvarAnimal">Adicionar animal</button>
+                <p id="msgAnimal" class="erro"></p>
+            </form>
+        </div>
+
     </main>
 
-    <script>
-        const token = localStorage.getItem('token');
-
-        if (!token) {
-            window.location.href = 'login.html';
-        }
-
-        document.getElementById('btnSair').addEventListener('click', () => {
-            localStorage.removeItem('token');
-            window.location.href = 'login.html';
-        });
-
-        async function carregarClientes() {
-            try {
-                const resposta = await fetch('/api/clientes', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                const clientes = await resposta.json();
-
-                document.getElementById('totalClientes').textContent = clientes.length;
-
-                const corpoTabela = document.querySelector('#tabelaClientes tbody');
-                corpoTabela.innerHTML = '';
-
-                const selectCliente = document.getElementById('animalCliente');
-                selectCliente.innerHTML = '';
-
-                clientes.forEach((cliente) => {
-                    const linha = document.createElement('tr');
-                    linha.innerHTML = `
-                        <td>${cliente.nome}</td>
-                        <td>${cliente.telefone}</td>
-                        <td>${cliente.email}</td>
-                    `;
-                    corpoTabela.appendChild(linha);
-
-                    const opcao = document.createElement('option');
-                    opcao.value = cliente.id;
-                    opcao.textContent = cliente.nome;
-                    selectCliente.appendChild(opcao);
-                });
-
-            } catch (erro) {
-                console.error(erro);
-            }
-        }
-
-        async function carregarAnimais() {
-            try {
-                const resposta = await fetch('/api/animais', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                const animais = await resposta.json();
-
-                document.getElementById('totalAnimais').textContent = animais.length;
-
-                const corpoTabela = document.querySelector('#tabelaAnimais tbody');
-                corpoTabela.innerHTML = '';
-
-                animais.forEach((animal) => {
-                    const linha = document.createElement('tr');
-                    linha.innerHTML = `
-                        <td>${animal.nome}</td>
-                        <td>${animal.especie}</td>
-                        <td>${animal.raca ?? '-'}</td>
-                        <td>${animal.idade ?? '-'}</td>
-                    `;
-                    corpoTabela.appendChild(linha);
-                });
-
-            } catch (erro) {
-                console.error(erro);
-            }
-        }
-
-        document.getElementById('formCliente').addEventListener('submit', async (evento) => {
-            evento.preventDefault();
-
-            const nome = document.getElementById('clienteNome').value;
-            const telefone = document.getElementById('clienteTelefone').value;
-            const email = document.getElementById('clienteEmail').value;
-
-            try {
-                await fetch('/api/clientes', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ nome, telefone, email })
-                });
-
-                evento.target.reset();
-                carregarClientes();
-
-            } catch (erro) {
-                console.error(erro);
-            }
-        });
-
-        document.getElementById('formAnimal').addEventListener('submit', async (evento) => {
-            evento.preventDefault();
-
-            const nome = document.getElementById('animalNome').value;
-            const especie = document.getElementById('animalEspecie').value;
-            const raca = document.getElementById('animalRaca').value;
-            const idade = document.getElementById('animalIdade').value;
-            const cliente_id = document.getElementById('animalCliente').value;
-
-            try {
-                await fetch('/api/animais', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ nome, especie, raca, idade, cliente_id })
-                });
-
-                evento.target.reset();
-                carregarAnimais();
-
-            } catch (erro) {
-                console.error(erro);
-            }
-        });
-
-        carregarClientes();
-        carregarAnimais();
-    </script>
+    <script src="js/dashboard.js"></script>
 </body>
 </html>
