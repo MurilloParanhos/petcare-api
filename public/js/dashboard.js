@@ -74,7 +74,15 @@ function editarCliente(cliente) {
     document.getElementById('clienteEmail').value = cliente.email;
     editandoClienteId = cliente.id;
     document.getElementById('btnSalvarCliente').textContent = 'Salvar edição';
+    document.getElementById('btnCancelarCliente').classList.remove('hidden');
 }
+
+document.getElementById('btnCancelarCliente').addEventListener('click', () => {
+    document.getElementById('formCliente').reset();
+    editandoClienteId = null;
+    document.getElementById('btnSalvarCliente').textContent = 'Adicionar cliente';
+    document.getElementById('btnCancelarCliente').classList.add('hidden');
+});
 
 async function excluirCliente(id) {
     if (!confirm('Tem certeza que quer excluir esse cliente?')) return;
@@ -142,7 +150,15 @@ function editarAnimal(animal) {
     document.getElementById('animalCliente').value = animal.cliente_id;
     editandoAnimalId = animal.id;
     document.getElementById('btnSalvarAnimal').textContent = 'Salvar edição';
+    document.getElementById('btnCancelarAnimal').classList.remove('hidden');
 }
+
+document.getElementById('btnCancelarAnimal').addEventListener('click', () => {
+    document.getElementById('formAnimal').reset();
+    editandoAnimalId = null;
+    document.getElementById('btnSalvarAnimal').textContent = 'Adicionar animal';
+    document.getElementById('btnCancelarAnimal').classList.add('hidden');
+});
 
 async function excluirAnimal(id) {
     if (!confirm('Tem certeza que quer excluir esse animal?')) return;
