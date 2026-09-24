@@ -4,6 +4,7 @@ const pool = require('./config/db');
 const usuarioRoutes = require('./routes/usuarioRoutes');
 const clienteRoutes = require('./routes/clienteRoutes');
 const animalRoutes = require('./routes/animalRoutes');
+const atendimentoRoutes = require('./routes/atendimentoRoutes');
 
 const app = express();
 app.use(express.json());
@@ -11,6 +12,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/api', usuarioRoutes);
 app.use('/api', clienteRoutes);
 app.use('/api', animalRoutes);
+app.use('/api', atendimentoRoutes);
 
 
 const PORT = 3000;

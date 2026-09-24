@@ -14,6 +14,7 @@
                 <li class="ativo" data-view="viewDashboard">Dashboard</li>
                 <li data-view="viewClientes">Clientes</li>
                 <li data-view="viewAnimais">Animais</li>
+                <li data-view="viewAtendimentos">Atendimentos</li>
             </ul>
         </nav>
         <button id="btnSair">Sair</button>
@@ -107,6 +108,43 @@
                 </div>
                 <button type="submit" id="btnSalvarAnimal">Adicionar animal</button> <button type="button" id="btnCancelarAnimal" class="hidden">Cancelar</button>
                 <p id="msgAnimal" class="erro"></p>
+            </form>
+        </div>
+
+        <div id="viewAtendimentos" class="view hidden">
+            <h2>Atendimentos</h2>
+            <table id="tabelaAtendimentos">
+    <thead>
+        <tr>
+            <th>Cliente</th>
+            <th>Serviço</th>
+            <th>Data</th>
+            <th>Observações</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+            <form id="formAtendimento" class="formulario">
+                <div>
+                    <label for="atendimentoCliente">Cliente</label>
+                    <select id="atendimentoCliente"></select>
+                </div>
+                <div>
+                    <label for="atendimentoServico">Serviço</label>
+                    <input type="text" id="atendimentoServico" placeholder="Ex: Banho e Tosa">
+                </div>
+                <div>
+                    <label for="atendimentoData">Data</label>
+                    <input type="date" id="atendimentoData">
+                </div>
+                <div>
+                    <label for="atendimentoObs">Observações</label>
+                    <input type="text" id="atendimentoObs">
+                </div>
+                <button type="submit" id="btnSalvarAtendimento">Registrar atendimento</button> <button type="button" id="btnCancelarAtendimento" class="hidden">Cancelar</button>
+                <p id="msgAtendimento" class="erro"></p>
             </form>
         </div>
 

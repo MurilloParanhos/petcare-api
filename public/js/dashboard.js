@@ -25,6 +25,18 @@ document.getElementById('btnSair').addEventListener('click', () => {
 
 let editandoClienteId = null;
 let editandoAnimalId = null;
+let editandoAtendimentoId = null;
+let listaClientes = [];
+
+function preencherSelectClientes(elementoSelect, clientes) {
+    elementoSelect.innerHTML = '';
+    clientes.forEach((cliente) => {
+        const opcao = document.createElement('option');
+        opcao.value = cliente.id;
+        opcao.textContent = cliente.nome;
+        elementoSelect.appendChild(opcao);
+    });
+}
 
 async function carregarClientes() {
     try {
@@ -33,14 +45,12 @@ async function carregarClientes() {
         });
 
         const clientes = await resposta.json();
+        listaClientes = clientes;
 
         document.getElementById('totalClientes').textContent = clientes.length;
 
         const corpoTabela = document.querySelector('#tabelaClientes tbody');
         corpoTabela.innerHTML = '';
-
-        const selectCliente = document.getElementById('animalCliente');
-        selectCliente.innerHTML = '';
 
         clientes.forEach((cliente) => {
             const linha = document.createElement('tr');
@@ -56,12 +66,10 @@ async function carregarClientes() {
             linha.querySelector('.btn-editar').addEventListener('click', () => editarCliente(cliente));
             linha.querySelector('.btn-excluir').addEventListener('click', () => excluirCliente(cliente.id));
             corpoTabela.appendChild(linha);
-
-            const opcao = document.createElement('option');
-            opcao.value = cliente.id;
-            opcao.textContent = cliente.nome;
-            selectCliente.appendChild(opcao);
         });
+
+        preencherSelectClientes(document.getElementById('animalCliente'), clientes);
+        preencherSelectClientes(document.getElementById('atendimentoCliente'), clientes);
 
     } catch (erro) {
         console.error(erro);
@@ -141,6 +149,58 @@ async function carregarAnimais() {
         console.error(erro);
     }
 }
+
+async function carregarAtendimentos() {
+    try {
+        const resposta = await fetch('/api/atendimentos', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const atendimentos = await resposta.json();
+
+        const corpoTabela = document.querySelector('#tabelaAtendimentos tbody');
+        corpoTabela.innerHTML = '';
+
+        atendimentos.forEach((atendimento) => {
+            const linha = document.createElement('tr');
+            const dataFormatada = new Date(atendimento.data_atendimento).toLocaleDateString('pt-BR');
+            linha.innerHTML = `
+                <td>${listaClientes.find(c => c.id === atendimento.cliente_id)?.nome ?? 'Cliente #' + atendimento.cliente_id}</td>
+                <td>${atendimento.tipo_servico}</td>
+                <td>${dataFormatada}</td>
+                <td>${atendimento.observacoes ?? '-'}</td>
+                <td>
+                    <button class="btn-editar">Editar</button>
+                </td>
+            `;
+            linha.querySelector('.btn-editar').addEventListener('click', () => editarAtendimento(atendimento));
+            corpoTabela.appendChild(linha);
+        });
+
+    } catch (erro) {
+        console.error(erro);
+    }
+}
+
+function editarAtendimento(atendimento) {
+    document.getElementById('atendimentoCliente').value = atendimento.cliente_id;
+    document.getElementById('atendimentoServico').value = atendimento.tipo_servico;
+
+    const data = new Date(atendimento.data_atendimento).toISOString().split('T')[0];
+    document.getElementById('atendimentoData').value = data;
+
+    document.getElementById('atendimentoObs').value = atendimento.observacoes ?? '';
+    editandoAtendimentoId = atendimento.id;
+    document.getElementById('btnSalvarAtendimento').textContent = 'Salvar edição';
+    document.getElementById('btnCancelarAtendimento').classList.remove('hidden');
+}
+
+document.getElementById('btnCancelarAtendimento').addEventListener('click', () => {
+    document.getElementById('formAtendimento').reset();
+    editandoAtendimentoId = null;
+    document.getElementById('btnSalvarAtendimento').textContent = 'Registrar atendimento';
+    document.getElementById('btnCancelarAtendimento').classList.add('hidden');
+});
 
 function editarAnimal(animal) {
     document.getElementById('animalNome').value = animal.nome;
@@ -282,5 +342,54 @@ document.getElementById('formAnimal').addEventListener('submit', async (evento) 
     }
 });
 
+document.getElementById('formAtendimento').addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+
+    const msg = document.getElementById('msgAtendimento');
+    msg.textContent = '';
+
+    const cliente_id = document.getElementById('atendimentoCliente').value;
+    const tipo_servico = document.getElementById('atendimentoServico').value.trim();
+    const data_atendimento = document.getElementById('atendimentoData').value;
+    const observacoes = document.getElementById('atendimentoObs').value.trim();
+
+    if (!cliente_id || !tipo_servico || !data_atendimento) {
+        msg.textContent = 'Preencha cliente, serviço e data.';
+        return;
+    }
+
+    const url = editandoAtendimentoId ? `/api/atendimentos/${editandoAtendimentoId}` : '/api/atendimentos';
+    const method = editandoAtendimentoId ? 'PUT' : 'POST';
+
+    try {
+        const resposta = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ cliente_id, tipo_servico, data_atendimento, observacoes })
+        });
+
+        const dados = await resposta.json();
+
+        if (!resposta.ok) {
+            msg.textContent = dados.erro || 'Erro ao salvar atendimento.';
+            return;
+        }
+
+        evento.target.reset();
+        editandoAtendimentoId = null;
+        document.getElementById('btnSalvarAtendimento').textContent = 'Registrar atendimento';
+        document.getElementById('btnCancelarAtendimento').classList.add('hidden');
+        carregarAtendimentos();
+
+    } catch (erro) {
+        console.error(erro);
+        msg.textContent = 'Erro ao conectar com o servidor.';
+    }
+});
+
 carregarClientes();
 carregarAnimais();
+carregarAtendimentos();
