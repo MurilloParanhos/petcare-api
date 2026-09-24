@@ -78,5 +78,3 @@ async function deletarAnimais(req, res) {
 }
 
 module.exports = { criarAnimal, listarAnimais, atualizarAnimais, deletarAnimais};
-
-  

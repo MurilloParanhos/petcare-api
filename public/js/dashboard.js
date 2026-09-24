@@ -164,6 +164,17 @@ async function carregarAtendimentos() {
         atendimentos.forEach((atendimento) => {
             const linha = document.createElement('tr');
             const dataFormatada = new Date(atendimento.data_atendimento).toLocaleDateString('pt-BR');
+
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            const dataDoAtendimento = new Date(atendimento.data_atendimento);
+
+            if (dataDoAtendimento < hoje) {
+                linha.classList.add('atendimento-realizado');
+            } else {
+                linha.classList.add('atendimento-agendado');
+            }
+
             linha.innerHTML = `
                 <td>${listaClientes.find(c => c.id === atendimento.cliente_id)?.nome ?? 'Cliente #' + atendimento.cliente_id}</td>
                 <td>${atendimento.tipo_servico}</td>

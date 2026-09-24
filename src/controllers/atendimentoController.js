@@ -58,4 +58,27 @@ async function atualizarAtendimento(req, res) {
     }
 }
 
-module.exports = { criarAtendimento, listarAtendimentos, atualizarAtendimento };
+async function listarClientesInativos(req, res) {
+    try {
+        const resultado = await pool.query(`
+            SELECT 
+                c.id, 
+                c.nome, 
+                c.telefone,
+                MAX(a.data_atendimento) AS ultimo_atendimento
+            FROM clientes c
+            LEFT JOIN atendimentos a ON a.cliente_id = c.id
+            GROUP BY c.id, c.nome, c.telefone
+            HAVING MAX(a.data_atendimento) IS NULL 
+                OR MAX(a.data_atendimento) < NOW() - INTERVAL '60 days'
+            ORDER BY ultimo_atendimento ASC NULLS FIRST
+        `);
+
+        res.json(resultado.rows);
+    } catch (erro) {
+        console.error(erro);
+        res.status(500).json({ erro: 'Erro ao listar clientes inativos.' });
+    }
+}
+
+module.exports = { criarAtendimento, listarAtendimentos, atualizarAtendimento, listarClientesInativos };
