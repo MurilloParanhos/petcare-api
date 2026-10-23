@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { api } from '../api';
-import { normalizar, paginar } from '../utils';
+import { formatarTelefone, mascaraTelefone, normalizar, paginar, somenteNumeros } from '../utils';
 import Paginacao from './Paginacao';
 
 const FORM_VAZIO = { nome: '', telefone: '', email: '' };
@@ -12,9 +12,14 @@ function Clientes({ clientes, recarregar }) {
     const [busca, setBusca] = useState('');
     const [pagina, setPagina] = useState(1);
 
-    // Busca no nome, telefone e email ao mesmo tempo, em ordem alfabetica
+    // Busca no nome, telefone e email ao mesmo tempo, em ordem alfabetica.
+    // O telefone e comparado so pelos numeros, entao "(12) 9888" tambem acha.
+    const numerosDaBusca = somenteNumeros(busca);
     const filtrados = clientes
-        .filter((c) => [c.nome, c.telefone, c.email].some((campo) => normalizar(campo).includes(normalizar(busca))))
+        .filter((c) =>
+            [c.nome, c.email].some((campo) => normalizar(campo).includes(normalizar(busca))) ||
+            (numerosDaBusca && somenteNumeros(c.telefone).includes(numerosDaBusca))
+        )
         .sort((a, b) => a.nome.localeCompare(b.nome));
 
     const paginacao = paginar(filtrados, pagina);
@@ -26,13 +31,14 @@ function Clientes({ clientes, recarregar }) {
 
     // Um onChange so para todos os campos, usando o "name" do input
     function alterarCampo(evento) {
-        setForm({ ...form, [evento.target.name]: evento.target.value });
+        const { name, value } = evento.target;
+        setForm({ ...form, [name]: name === 'telefone' ? mascaraTelefone(value) : value });
     }
 
     function editar(cliente) {
         setForm({
             nome: cliente.nome,
-            telefone: cliente.telefone ?? '',
+            telefone: mascaraTelefone(cliente.telefone),
             email: cliente.email ?? ''
         });
         setEditandoId(cliente.id);
@@ -61,11 +67,16 @@ function Clientes({ clientes, recarregar }) {
         setMsg('');
 
         const nome = form.nome.trim();
-        const telefone = form.telefone.trim();
+        const telefone = somenteNumeros(form.telefone);
         const email = form.email.trim();
 
         if (!nome) {
             setMsg('Preencha o nome do cliente.');
+            return;
+        }
+
+        if (telefone && telefone.length < 10) {
+            setMsg('Telefone incompleto: informe o DDD e o número.');
             return;
         }
 
@@ -92,7 +103,7 @@ function Clientes({ clientes, recarregar }) {
                 </div>
                 <div>
                     <label htmlFor="clienteTelefone">Telefone</label>
-                    <input type="text" id="clienteTelefone" name="telefone" value={form.telefone} onChange={alterarCampo} />
+                    <input type="tel" id="clienteTelefone" name="telefone" placeholder="(DD) 00000-0000" value={form.telefone} onChange={alterarCampo} />
                 </div>
                 <div>
                     <label htmlFor="clienteEmail">Email</label>
@@ -125,7 +136,7 @@ function Clientes({ clientes, recarregar }) {
                     {paginacao.itens.map((cliente) => (
                         <tr key={cliente.id}>
                             <td>{cliente.nome}</td>
-                            <td>{cliente.telefone}</td>
+                            <td>{formatarTelefone(cliente.telefone)}</td>
                             <td>{cliente.email}</td>
                             <td>
                                 <button className="btn-editar" onClick={() => editar(cliente)}>Editar</button>

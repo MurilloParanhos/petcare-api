@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { api } from '../api';
-import { normalizar, paginar } from '../utils';
+import { formatarTelefone, normalizar, paginar } from '../utils';
 import Paginacao from './Paginacao';
 
 const FORM_VAZIO = { cliente_id: '', animal_id: '', tipo_servico: '', data_atendimento: '', observacoes: '' };
@@ -310,7 +310,7 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar })
                             {inativos.map((cliente) => (
                                 <tr key={cliente.id}>
                                     <td>{cliente.nome}</td>
-                                    <td>{cliente.telefone ?? '-'}</td>
+                                    <td>{formatarTelefone(cliente.telefone) || '-'}</td>
                                     <td>
                                         {cliente.ultimo_atendimento
                                             ? new Date(cliente.ultimo_atendimento).toLocaleDateString('pt-BR')
