@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { api } from '../api';
+import { normalizar, paginar } from '../utils';
+import Paginacao from './Paginacao';
 
 const FORM_VAZIO = { nome: '', especie: '', raca: '', idade: '', cliente_id: '' };
 
@@ -7,6 +9,34 @@ function Animais({ animais, clientes, recarregar }) {
     const [form, setForm] = useState(FORM_VAZIO);
     const [editandoId, setEditandoId] = useState(null);
     const [msg, setMsg] = useState('');
+    const [busca, setBusca] = useState('');
+    const [especie, setEspecie] = useState('');
+    const [pagina, setPagina] = useState(1);
+
+    function nomeDoDono(clienteId) {
+        return clientes.find((c) => c.id === clienteId)?.nome ?? '-';
+    }
+
+    // Especies para o filtro, sem repetir "Gato" e "gato"
+    const especies = [...new Map(
+        animais.map((a) => [normalizar(a.especie), a.especie.trim()])
+    ).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+
+    // Busca no nome do animal, na raca e no nome do dono, em ordem alfabetica
+    const filtrados = animais
+        .filter((a) => [a.nome, a.raca, nomeDoDono(a.cliente_id)].some((campo) => normalizar(campo).includes(normalizar(busca))))
+        .filter((a) => !especie || normalizar(a.especie) === especie)
+        .sort((a, b) => a.nome.localeCompare(b.nome));
+
+    const paginacao = paginar(filtrados, pagina);
+
+    // Qualquer filtro novo volta para a primeira pagina
+    function filtrar(setFiltro) {
+        return (valor) => {
+            setFiltro(valor);
+            setPagina(1);
+        };
+    }
 
     function alterarCampo(evento) {
         setForm({ ...form, [evento.target.name]: evento.target.value });
@@ -21,6 +51,7 @@ function Animais({ animais, clientes, recarregar }) {
             cliente_id: animal.cliente_id
         });
         setEditandoId(animal.id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function cancelar() {
@@ -74,31 +105,6 @@ function Animais({ animais, clientes, recarregar }) {
     return (
         <div>
             <h2>Animais</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Espécie</th>
-                        <th>Raça</th>
-                        <th>Idade</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {animais.map((animal) => (
-                        <tr key={animal.id}>
-                            <td>{animal.nome}</td>
-                            <td>{animal.especie}</td>
-                            <td>{animal.raca ?? '-'}</td>
-                            <td>{animal.idade ?? '-'}</td>
-                            <td>
-                                <button className="btn-editar" onClick={() => editar(animal)}>Editar</button>
-                                <button className="btn-excluir" onClick={() => excluir(animal.id)}>Excluir</button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
 
             <form className="formulario" onSubmit={salvar}>
                 <div>
@@ -130,6 +136,56 @@ function Animais({ animais, clientes, recarregar }) {
                 {editandoId && <button type="button" onClick={cancelar}>Cancelar</button>}
                 <p className="erro">{msg}</p>
             </form>
+
+            <div className="filtros">
+                <input
+                    type="search"
+                    placeholder="Buscar por nome, raça ou dono..."
+                    value={busca}
+                    onChange={(e) => filtrar(setBusca)(e.target.value)}
+                />
+                <select value={especie} onChange={(e) => filtrar(setEspecie)(e.target.value)}>
+                    <option value="">Todas as espécies</option>
+                    {especies.map(([chave, nome]) => (
+                        <option key={chave} value={chave}>{nome}</option>
+                    ))}
+                </select>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Espécie</th>
+                        <th>Raça</th>
+                        <th>Idade</th>
+                        <th>Dono</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {paginacao.itens.map((animal) => (
+                        <tr key={animal.id}>
+                            <td>{animal.nome}</td>
+                            <td>{animal.especie}</td>
+                            <td>{animal.raca ?? '-'}</td>
+                            <td>{animal.idade ?? '-'}</td>
+                            <td>{nomeDoDono(animal.cliente_id)}</td>
+                            <td>
+                                <button className="btn-editar" onClick={() => editar(animal)}>Editar</button>
+                                <button className="btn-excluir" onClick={() => excluir(animal.id)}>Excluir</button>
+                            </td>
+                        </tr>
+                    ))}
+                    {filtrados.length === 0 && (
+                        <tr>
+                            <td colSpan="6">Nenhum animal encontrado.</td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+
+            <Paginacao paginacao={paginacao} onTrocarPagina={setPagina} />
         </div>
     );
 }

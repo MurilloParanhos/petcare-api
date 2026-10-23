@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { api } from '../api';
+import { normalizar, paginar } from '../utils';
+import Paginacao from './Paginacao';
 
 const FORM_VAZIO = { nome: '', telefone: '', email: '' };
 
@@ -7,6 +9,20 @@ function Clientes({ clientes, recarregar }) {
     const [form, setForm] = useState(FORM_VAZIO);
     const [editandoId, setEditandoId] = useState(null);
     const [msg, setMsg] = useState('');
+    const [busca, setBusca] = useState('');
+    const [pagina, setPagina] = useState(1);
+
+    // Busca no nome, telefone e email ao mesmo tempo, em ordem alfabetica
+    const filtrados = clientes
+        .filter((c) => [c.nome, c.telefone, c.email].some((campo) => normalizar(campo).includes(normalizar(busca))))
+        .sort((a, b) => a.nome.localeCompare(b.nome));
+
+    const paginacao = paginar(filtrados, pagina);
+
+    function buscar(texto) {
+        setBusca(texto);
+        setPagina(1);
+    }
 
     // Um onChange so para todos os campos, usando o "name" do input
     function alterarCampo(evento) {
@@ -20,6 +36,7 @@ function Clientes({ clientes, recarregar }) {
             email: cliente.email ?? ''
         });
         setEditandoId(cliente.id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function cancelar() {
@@ -67,29 +84,6 @@ function Clientes({ clientes, recarregar }) {
     return (
         <div>
             <h2>Clientes</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Telefone</th>
-                        <th>Email</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {clientes.map((cliente) => (
-                        <tr key={cliente.id}>
-                            <td>{cliente.nome}</td>
-                            <td>{cliente.telefone}</td>
-                            <td>{cliente.email}</td>
-                            <td>
-                                <button className="btn-editar" onClick={() => editar(cliente)}>Editar</button>
-                                <button className="btn-excluir" onClick={() => excluir(cliente.id)}>Excluir</button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
 
             <form className="formulario" onSubmit={salvar}>
                 <div>
@@ -108,6 +102,46 @@ function Clientes({ clientes, recarregar }) {
                 {editandoId && <button type="button" onClick={cancelar}>Cancelar</button>}
                 <p className="erro">{msg}</p>
             </form>
+
+            <div className="filtros">
+                <input
+                    type="search"
+                    placeholder="Buscar por nome, telefone ou email..."
+                    value={busca}
+                    onChange={(e) => buscar(e.target.value)}
+                />
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Telefone</th>
+                        <th>Email</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {paginacao.itens.map((cliente) => (
+                        <tr key={cliente.id}>
+                            <td>{cliente.nome}</td>
+                            <td>{cliente.telefone}</td>
+                            <td>{cliente.email}</td>
+                            <td>
+                                <button className="btn-editar" onClick={() => editar(cliente)}>Editar</button>
+                                <button className="btn-excluir" onClick={() => excluir(cliente.id)}>Excluir</button>
+                            </td>
+                        </tr>
+                    ))}
+                    {filtrados.length === 0 && (
+                        <tr>
+                            <td colSpan="4">Nenhum cliente encontrado.</td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+
+            <Paginacao paginacao={paginacao} onTrocarPagina={setPagina} />
         </div>
     );
 }

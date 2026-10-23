@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { api } from '../api';
+import { normalizar, paginar } from '../utils';
+import Paginacao from './Paginacao';
 
 const FORM_VAZIO = { cliente_id: '', tipo_servico: '', data_atendimento: '', observacoes: '' };
-const POR_PAGINA = 10;
 
 const STATUS = [
     { id: 'agendados', nome: 'Agendados' },
@@ -14,11 +15,6 @@ function inicioDeHoje() {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     return hoje;
-}
-
-// Deixa o texto sem acento e minusculo, para a busca achar "Patricia" digitando "patrícia"
-function normalizar(texto) {
-    return texto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
 }
 
 function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
@@ -55,10 +51,7 @@ function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
             return status === 'agendados' ? diferenca : -diferenca;
         });
 
-    const totalPaginas = Math.max(1, Math.ceil(filtrados.length / POR_PAGINA));
-    const paginaAtual = Math.min(pagina, totalPaginas);
-    const inicio = (paginaAtual - 1) * POR_PAGINA;
-    const daPagina = filtrados.slice(inicio, inicio + POR_PAGINA);
+    const paginacao = paginar(filtrados, pagina);
 
     // Qualquer filtro novo volta para a primeira pagina
     function filtrar(setFiltro) {
@@ -208,7 +201,7 @@ function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {daPagina.map((atendimento) => (
+                            {paginacao.itens.map((atendimento) => (
                                 <tr
                                     key={atendimento.id}
                                     className={jaAconteceu(atendimento) ? 'atendimento-realizado' : 'atendimento-agendado'}
@@ -230,22 +223,7 @@ function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
                         </tbody>
                     </table>
 
-                    {filtrados.length > 0 && (
-                        <div className="paginacao">
-                            <span>
-                                Mostrando {inicio + 1}–{inicio + daPagina.length} de {filtrados.length}
-                            </span>
-                            <div>
-                                <button disabled={paginaAtual === 1} onClick={() => setPagina(paginaAtual - 1)}>
-                                    Anterior
-                                </button>
-                                <span>Página {paginaAtual} de {totalPaginas}</span>
-                                <button disabled={paginaAtual === totalPaginas} onClick={() => setPagina(paginaAtual + 1)}>
-                                    Próxima
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    <Paginacao paginacao={paginacao} onTrocarPagina={setPagina} />
                 </>
             )}
 
