@@ -1,4 +1,6 @@
-/* O body do style.css e flex; a div root precisa ocupar a largura toda */
+/* O body do style.css e flex; a div root precisa ocupar a largura toda
+   e repassar o flex para a sidebar e o conteudo ficarem lado a lado */
 #root {
     width: 100%;
+    display: flex;
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-function Login() {
+function Login({ onEntrar }) {
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [mostrarSenha, setMostrarSenha] = useState(false);
@@ -24,7 +24,7 @@ function Login() {
             }
 
             localStorage.setItem('token', dados.token);
-            window.location.href = '/dashboard.html';
+            onEntrar();
 
         } catch (erro) {
             console.error(erro);
