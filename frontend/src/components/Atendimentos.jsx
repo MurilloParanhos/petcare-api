@@ -5,13 +5,21 @@ const FORM_VAZIO = { cliente_id: '', tipo_servico: '', data_atendimento: '', obs
 
 function Atendimentos({ clientes }) {
     const [atendimentos, setAtendimentos] = useState([]);
+    const [inativos, setInativos] = useState([]);
     const [form, setForm] = useState(FORM_VAZIO);
     const [editandoId, setEditandoId] = useState(null);
     const [msg, setMsg] = useState('');
 
+    // Carrega os atendimentos e os clientes inativos juntos, porque
+    // salvar um atendimento pode tirar alguem da lista de inativos
     async function carregarAtendimentos() {
         try {
-            setAtendimentos(await api('/api/atendimentos'));
+            const [listaAtendimentos, listaInativos] = await Promise.all([
+                api('/api/atendimentos'),
+                api('/api/atendimentos/inativos')
+            ]);
+            setAtendimentos(listaAtendimentos);
+            setInativos(listaInativos);
         } catch (erro) {
             console.error(erro);
         }
@@ -132,7 +140,6 @@ function Atendimentos({ clientes }) {
                 <p className="erro">{msg}</p>
             </form>
 
-            {/* A logica de Clientes Inativos ainda vai ser feita */}
             <h2>Clientes Inativos (Sem atendimento há mais de 60 dias)</h2>
             <table>
                 <thead>
@@ -142,7 +149,24 @@ function Atendimentos({ clientes }) {
                         <th>Último Atendimento</th>
                     </tr>
                 </thead>
-                <tbody></tbody>
+                <tbody>
+                    {inativos.map((cliente) => (
+                        <tr key={cliente.id}>
+                            <td>{cliente.nome}</td>
+                            <td>{cliente.telefone ?? '-'}</td>
+                            <td>
+                                {cliente.ultimo_atendimento
+                                    ? new Date(cliente.ultimo_atendimento).toLocaleDateString('pt-BR')
+                                    : 'Nunca atendido'}
+                            </td>
+                        </tr>
+                    ))}
+                    {inativos.length === 0 && (
+                        <tr>
+                            <td colSpan="3">Nenhum cliente inativo. 🎉</td>
+                        </tr>
+                    )}
+                </tbody>
             </table>
         </div>
     );
