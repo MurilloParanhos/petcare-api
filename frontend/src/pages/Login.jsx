@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
-function Login({ onEntrar }) {
+function Login({ aviso, onEntrar }) {
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [mostrarSenha, setMostrarSenha] = useState(false);
-    const [mensagemErro, setMensagemErro] = useState('');
+    const [mensagemErro, setMensagemErro] = useState(aviso ?? '');
 
     async function entrar(evento) {
         evento.preventDefault();

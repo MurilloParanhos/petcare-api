@@ -12,6 +12,13 @@ export function usuarioLogado() {
     }
 }
 
+// O App registra aqui o que fazer quando a API disser que o token venceu
+let aoExpirarSessao = () => {};
+
+export function quandoSessaoExpirar(funcao) {
+    aoExpirarSessao = funcao;
+}
+
 // Faz uma chamada para a API ja com o token e o JSON.
 // Se der erro, lanca um Error com a mensagem que veio do servidor.
 export async function api(url, { method = 'GET', body } = {}) {
@@ -28,6 +35,11 @@ export async function api(url, { method = 'GET', body } = {}) {
         });
     } catch {
         throw new Error('Erro ao conectar com o servidor.');
+    }
+
+    if (resposta.status === 401) {
+        aoExpirarSessao();
+        throw new Error('Sua sessão expirou. Faça login novamente.');
     }
 
     const dados = await resposta.json();

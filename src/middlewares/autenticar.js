@@ -10,8 +10,9 @@ function autenticar(req, res, next) {
     const token = authHeader.split(' ')[1];
 
     jwt.verify(token, process.env.JWT_SECRET, (erro, usuario) => {
+        // 401 = nao autenticado; o front usa esse codigo para voltar ao login
         if (erro) {
-            return res.status(403).json({ erro: 'Token inválido ou expirado.' });
+            return res.status(401).json({ erro: 'Token inválido ou expirado.' });
         }
 
         req.usuario = usuario;
