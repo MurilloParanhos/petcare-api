@@ -11,20 +11,34 @@ body {
     background-color: #f4f6f5;
 }
 
+/* Fica parada na tela enquanto o conteudo rola */
 .sidebar {
     width: 220px;
+    flex-shrink: 0;
     background-color: #1f3d2c;
     color: white;
     padding: 20px;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
-
+    height: 100vh;
+    position: sticky;
+    top: 0;
 }
 
-.sidebar h2 {
-    margin-bottom: 30px;
+.sidebar-logo {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
     font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    padding-left: 12px;
+}
+
+.sidebar-logo i {
+    font-size: 12px;
+    color: #8fd694;
+    transform: translateY(-4px);
 }
 
 .sidebar nav ul {
@@ -32,14 +46,35 @@ body {
 }
 
 .sidebar nav ul li {
-    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
     margin-bottom: 5px;
     border-radius: 6px;
+    border-left: 3px solid transparent;
+    color: #d6e4da;
     cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.sidebar nav ul li i {
+    width: 18px;
+    text-align: center;
+}
+
+.sidebar nav ul li:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar nav ul li .contador {
+    margin-left: auto;
 }
 
 .sidebar nav ul li.ativo {
     background-color: #2e5940;
+    border-left-color: #8fd694;
+    color: white;
     font-weight: bold;
 }
 
@@ -141,15 +176,50 @@ th {
     margin-top: -5px;
 }
 
-#btnSair {
+.sidebar-rodape {
     margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-usuario {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px 10px;
+    font-size: 14px;
+}
+
+.sidebar-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #2e5940;
+    color: #8fd694;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+#btnSair {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     width: 100%;
-    padding: 10px;
-    background-color: #a83232;
-    color: white;
+    padding: 10px 12px;
+    background: none;
+    color: #d6e4da;
     border: none;
     border-radius: 6px;
+    font-size: 14px;
     cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+#btnSair:hover {
+    background-color: #a83232;
+    color: white;
 }
 
 .hidden {

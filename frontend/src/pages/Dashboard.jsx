@@ -53,7 +53,7 @@ function Dashboard({ onSair }) {
 
     return (
         <>
-            <Sidebar abaAtual={aba} onTrocarAba={setAba} onSair={onSair} />
+            <Sidebar abaAtual={aba} onTrocarAba={setAba} onSair={onSair} totalInativos={inativos.length} />
 
             <main className="conteudo">
                 {aba === 'resumo' && (
