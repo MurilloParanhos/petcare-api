@@ -409,3 +409,122 @@ th {
 .painel table {
     margin: 10px 0 0;
 }
+
+/* ===== SUB-ABAS, FILTROS E PAGINACAO ===== */
+
+.sub-abas {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid #e0e0e0;
+    margin: 15px 0 20px;
+}
+
+.sub-abas button {
+    padding: 10px 16px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sub-abas button.ativo {
+    color: #1f3d2c;
+    font-weight: bold;
+    border-bottom-color: #1f3d2c;
+}
+
+.contador {
+    background-color: #d4a017;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 7px;
+    border-radius: 10px;
+}
+
+.filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.filtros input,
+.filtros select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+}
+
+.filtros input {
+    flex: 1;
+    min-width: 200px;
+}
+
+.grupo-botoes {
+    display: flex;
+}
+
+.grupo-botoes button {
+    padding: 8px 14px;
+    border: 1px solid #ccc;
+    background: white;
+    color: #444;
+    cursor: pointer;
+}
+
+.grupo-botoes button + button {
+    border-left: none;
+}
+
+.grupo-botoes button:first-child {
+    border-radius: 4px 0 0 4px;
+}
+
+.grupo-botoes button:last-child {
+    border-radius: 0 4px 4px 0;
+}
+
+.grupo-botoes button.ativo {
+    background-color: #1f3d2c;
+    border-color: #1f3d2c;
+    color: white;
+}
+
+.paginacao {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.paginacao div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.paginacao button {
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+}
+
+.paginacao button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
