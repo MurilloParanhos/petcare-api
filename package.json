@@ -8,6 +8,7 @@
     "front": "npm --prefix frontend run dev",
     "build": "npm --prefix frontend install && npm --prefix frontend run build",
     "redefinir-senha": "node src/scripts/redefinirSenha.js",
+    "dados-teste": "node src/scripts/dadosTeste.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
