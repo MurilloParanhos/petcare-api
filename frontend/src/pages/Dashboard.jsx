@@ -10,6 +10,8 @@ function Dashboard({ onSair }) {
     const [aba, setAba] = useState('resumo');
     const [clientes, setClientes] = useState([]);
     const [animais, setAnimais] = useState([]);
+    const [atendimentos, setAtendimentos] = useState([]);
+    const [inativos, setInativos] = useState([]);
 
     async function carregarClientes() {
         try {
@@ -27,10 +29,26 @@ function Dashboard({ onSair }) {
         }
     }
 
+    // Carrega os atendimentos e os clientes inativos juntos, porque
+    // salvar um atendimento pode tirar alguem da lista de inativos
+    async function carregarAtendimentos() {
+        try {
+            const [listaAtendimentos, listaInativos] = await Promise.all([
+                api('/api/atendimentos'),
+                api('/api/atendimentos/inativos')
+            ]);
+            setAtendimentos(listaAtendimentos);
+            setInativos(listaInativos);
+        } catch (erro) {
+            console.error(erro);
+        }
+    }
+
     // Roda uma vez quando o dashboard aparece na tela
     useEffect(() => {
         carregarClientes();
         carregarAnimais();
+        carregarAtendimentos();
     }, []);
 
     return (
@@ -39,7 +57,13 @@ function Dashboard({ onSair }) {
 
             <main className="conteudo">
                 {aba === 'resumo' && (
-                    <Resumo totalClientes={clientes.length} totalAnimais={animais.length} />
+                    <Resumo
+                        totalClientes={clientes.length}
+                        totalAnimais={animais.length}
+                        atendimentos={atendimentos}
+                        inativos={inativos}
+                        clientes={clientes}
+                    />
                 )}
                 {aba === 'clientes' && (
                     <Clientes clientes={clientes} recarregar={carregarClientes} />
@@ -48,7 +72,12 @@ function Dashboard({ onSair }) {
                     <Animais animais={animais} clientes={clientes} recarregar={carregarAnimais} />
                 )}
                 {aba === 'atendimentos' && (
-                    <Atendimentos clientes={clientes} />
+                    <Atendimentos
+                        atendimentos={atendimentos}
+                        inativos={inativos}
+                        clientes={clientes}
+                        recarregar={carregarAtendimentos}
+                    />
                 )}
             </main>
         </>

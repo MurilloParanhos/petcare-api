@@ -1,33 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { api } from '../api';
 
 const FORM_VAZIO = { cliente_id: '', tipo_servico: '', data_atendimento: '', observacoes: '' };
 
-function Atendimentos({ clientes }) {
-    const [atendimentos, setAtendimentos] = useState([]);
-    const [inativos, setInativos] = useState([]);
+function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
     const [form, setForm] = useState(FORM_VAZIO);
     const [editandoId, setEditandoId] = useState(null);
     const [msg, setMsg] = useState('');
-
-    // Carrega os atendimentos e os clientes inativos juntos, porque
-    // salvar um atendimento pode tirar alguem da lista de inativos
-    async function carregarAtendimentos() {
-        try {
-            const [listaAtendimentos, listaInativos] = await Promise.all([
-                api('/api/atendimentos'),
-                api('/api/atendimentos/inativos')
-            ]);
-            setAtendimentos(listaAtendimentos);
-            setInativos(listaInativos);
-        } catch (erro) {
-            console.error(erro);
-        }
-    }
-
-    useEffect(() => {
-        carregarAtendimentos();
-    }, []);
 
     function nomeDoCliente(clienteId) {
         return clientes.find((c) => c.id === clienteId)?.nome ?? `Cliente #${clienteId}`;
@@ -79,7 +58,7 @@ function Atendimentos({ clientes }) {
         try {
             await api(url, { method, body: { cliente_id, tipo_servico, data_atendimento, observacoes } });
             cancelar();
-            carregarAtendimentos();
+            recarregar();
         } catch (erro) {
             setMsg(erro.message);
         }
