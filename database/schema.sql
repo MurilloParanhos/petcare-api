@@ -26,6 +26,7 @@ CREATE TABLE animais (
 CREATE TABLE atendimentos (
     id SERIAL PRIMARY KEY,
     cliente_id INTEGER REFERENCES clientes(id),
+    animal_id INTEGER REFERENCES animais(id) ON DELETE SET NULL,
     tipo_servico VARCHAR(100) NOT NULL,
     data_atendimento DATE NOT NULL,
     observacoes TEXT

@@ -63,6 +63,7 @@ function Dashboard({ onSair }) {
                         atendimentos={atendimentos}
                         inativos={inativos}
                         clientes={clientes}
+                        animais={animais}
                     />
                 )}
                 {aba === 'clientes' && (
@@ -76,6 +77,7 @@ function Dashboard({ onSair }) {
                         atendimentos={atendimentos}
                         inativos={inativos}
                         clientes={clientes}
+                        animais={animais}
                         recarregar={carregarAtendimentos}
                     />
                 )}

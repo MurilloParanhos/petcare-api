@@ -3,7 +3,7 @@ import { api } from '../api';
 import { normalizar, paginar } from '../utils';
 import Paginacao from './Paginacao';
 
-const FORM_VAZIO = { cliente_id: '', tipo_servico: '', data_atendimento: '', observacoes: '' };
+const FORM_VAZIO = { cliente_id: '', animal_id: '', tipo_servico: '', data_atendimento: '', observacoes: '' };
 
 const STATUS = [
     { id: 'agendados', nome: 'Agendados' },
@@ -17,7 +17,7 @@ function inicioDeHoje() {
     return hoje;
 }
 
-function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
+function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar }) {
     const [subAba, setSubAba] = useState('atendimentos');
     const [form, setForm] = useState(FORM_VAZIO);
     const [editandoId, setEditandoId] = useState(null);
@@ -32,6 +32,20 @@ function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
         return clientes.find((c) => c.id === clienteId)?.nome ?? `Cliente #${clienteId}`;
     }
 
+    function nomeDoAnimal(animalId) {
+        return animais.find((a) => a.id === animalId)?.nome ?? '-';
+    }
+
+    function animaisDoCliente(clienteId) {
+        return animais.filter((a) => a.cliente_id === Number(clienteId));
+    }
+
+    // Se o cliente tem um animal so, ele ja vem escolhido
+    function animalPadrao(clienteId) {
+        const doCliente = animaisDoCliente(clienteId);
+        return doCliente.length === 1 ? doCliente[0].id : '';
+    }
+
     function jaAconteceu(atendimento) {
         return new Date(atendimento.data_atendimento) < inicioDeHoje();
     }
@@ -43,7 +57,7 @@ function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
 
     const filtrados = atendimentos
         .filter((a) => status === 'todos' || (status === 'realizados') === jaAconteceu(a))
-        .filter((a) => normalizar(nomeDoCliente(a.cliente_id)).includes(normalizar(busca)))
+        .filter((a) => [nomeDoCliente(a.cliente_id), nomeDoAnimal(a.animal_id)].some((campo) => normalizar(campo).includes(normalizar(busca))))
         .filter((a) => !servico || normalizar(a.tipo_servico) === servico)
         .sort((a, b) => {
             const diferenca = new Date(a.data_atendimento) - new Date(b.data_atendimento);
@@ -65,9 +79,16 @@ function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
         setForm({ ...form, [evento.target.name]: evento.target.value });
     }
 
+    // Trocar o cliente limpa o animal, porque o animal anterior era de outro dono
+    function escolherCliente(evento) {
+        const clienteId = evento.target.value;
+        setForm({ ...form, cliente_id: clienteId, animal_id: animalPadrao(clienteId) });
+    }
+
     function editar(atendimento) {
         setForm({
             cliente_id: atendimento.cliente_id,
+            animal_id: atendimento.animal_id ?? animalPadrao(atendimento.cliente_id),
             tipo_servico: atendimento.tipo_servico,
             data_atendimento: new Date(atendimento.data_atendimento).toISOString().split('T')[0],
             observacoes: atendimento.observacoes ?? ''
@@ -78,7 +99,7 @@ function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
 
     // Botao "Agendar" da lista de inativos: abre o formulario com o cliente escolhido
     function agendar(clienteId) {
-        setForm({ ...FORM_VAZIO, cliente_id: clienteId });
+        setForm({ ...FORM_VAZIO, cliente_id: clienteId, animal_id: animalPadrao(clienteId) });
         setEditandoId(null);
         setSubAba('atendimentos');
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -94,7 +115,7 @@ function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
         evento.preventDefault();
         setMsg('');
 
-        const { cliente_id, data_atendimento } = form;
+        const { cliente_id, animal_id, data_atendimento } = form;
         const tipo_servico = form.tipo_servico.trim();
         const observacoes = form.observacoes.trim();
 
@@ -103,11 +124,16 @@ function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
             return;
         }
 
+        if (!animal_id && animaisDoCliente(cliente_id).length > 0) {
+            setMsg('Escolha qual animal foi atendido.');
+            return;
+        }
+
         const url = editandoId ? `/api/atendimentos/${editandoId}` : '/api/atendimentos';
         const method = editandoId ? 'PUT' : 'POST';
 
         try {
-            await api(url, { method, body: { cliente_id, tipo_servico, data_atendimento, observacoes } });
+            await api(url, { method, body: { cliente_id, animal_id, tipo_servico, data_atendimento, observacoes } });
             cancelar();
             recarregar();
         } catch (erro) {
@@ -140,10 +166,31 @@ function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
                     <form className="formulario" onSubmit={salvar}>
                         <div>
                             <label htmlFor="atendimentoCliente">Cliente</label>
-                            <select id="atendimentoCliente" name="cliente_id" value={form.cliente_id} onChange={alterarCampo}>
+                            <select id="atendimentoCliente" name="cliente_id" value={form.cliente_id} onChange={escolherCliente}>
                                 <option value="">Selecione...</option>
                                 {clientes.map((cliente) => (
                                     <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label htmlFor="atendimentoAnimal">Pet</label>
+                            <select
+                                id="atendimentoAnimal"
+                                name="animal_id"
+                                value={form.animal_id}
+                                onChange={alterarCampo}
+                                disabled={animaisDoCliente(form.cliente_id).length === 0}
+                            >
+                                <option value="">
+                                    {!form.cliente_id
+                                        ? 'Escolha o cliente'
+                                        : animaisDoCliente(form.cliente_id).length === 0
+                                            ? 'Cliente sem pets'
+                                            : 'Selecione...'}
+                                </option>
+                                {animaisDoCliente(form.cliente_id).map((animal) => (
+                                    <option key={animal.id} value={animal.id}>{animal.nome}</option>
                                 ))}
                             </select>
                         </div>
@@ -167,7 +214,7 @@ function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
                     <div className="filtros">
                         <input
                             type="search"
-                            placeholder="Buscar por cliente..."
+                            placeholder="Buscar por cliente ou pet..."
                             value={busca}
                             onChange={(e) => filtrar(setBusca)(e.target.value)}
                         />
@@ -194,6 +241,7 @@ function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
                         <thead>
                             <tr>
                                 <th>Cliente</th>
+                                <th>Pet</th>
                                 <th>Serviço</th>
                                 <th>Data</th>
                                 <th>Observações</th>
@@ -207,6 +255,7 @@ function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
                                     className={jaAconteceu(atendimento) ? 'atendimento-realizado' : 'atendimento-agendado'}
                                 >
                                     <td>{nomeDoCliente(atendimento.cliente_id)}</td>
+                                    <td>{nomeDoAnimal(atendimento.animal_id)}</td>
                                     <td>{atendimento.tipo_servico}</td>
                                     <td>{new Date(atendimento.data_atendimento).toLocaleDateString('pt-BR')}</td>
                                     <td>{atendimento.observacoes ?? '-'}</td>
@@ -217,7 +266,7 @@ function Atendimentos({ atendimentos, inativos, clientes, recarregar }) {
                             ))}
                             {filtrados.length === 0 && (
                                 <tr>
-                                    <td colSpan="5">Nenhum atendimento encontrado com esses filtros.</td>
+                                    <td colSpan="6">Nenhum atendimento encontrado com esses filtros.</td>
                                 </tr>
                             )}
                         </tbody>

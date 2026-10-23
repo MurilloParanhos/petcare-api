@@ -27,7 +27,7 @@ O projeto começou com o front-end em HTML, CSS e JavaScript puro e foi migrado 
 - Login com senha criptografada e token JWT (validade de 8 horas)
 - Rotas da API protegidas por middleware de autenticação
 - CRUD de clientes e de animais
-- Cadastro, edição e agendamento de atendimentos
+- Cadastro, edição e agendamento de atendimentos, vinculados ao cliente e ao pet atendido
 - Destaque visual de atendimentos realizados e agendados
 - Lista de clientes inativos (sem atendimento há mais de 60 dias), com atalho para agendar
 - Dashboard com:
@@ -41,7 +41,8 @@ O projeto começou com o front-end em HTML, CSS e JavaScript puro e foi migrado 
 
 ```
 ├── database/
-│   └── schema.sql          # Criação das tabelas
+│   ├── schema.sql          # Criação das tabelas
+│   └── migrations/         # Alterações em bancos já existentes
 ├── frontend/               # Aplicação React (Vite)
 │   └── src/
 │       ├── api.js          # fetch com token JWT
@@ -71,7 +72,7 @@ O projeto começou com o front-end em HTML, CSS e JavaScript puro e foi migrado 
    npm --prefix frontend install
    ```
 
-2. Crie um banco no PostgreSQL e rode o arquivo `database/schema.sql` para criar as tabelas.
+2. Crie um banco no PostgreSQL e rode o arquivo `database/schema.sql` para criar as tabelas. Se o seu banco foi criado com uma versão anterior do projeto, rode os arquivos de `database/migrations/` em ordem.
 
 3. Copie o `.env.example` para `.env` e preencha com os dados do seu banco e um `JWT_SECRET`.
 
@@ -134,7 +135,7 @@ Todas as rotas, exceto cadastro de usuário e login, exigem o cabeçalho `Author
 | PUT | `/api/animais/:id` | Sim | Atualiza um animal |
 | DELETE | `/api/animais/:id` | Sim | Exclui um animal |
 | GET | `/api/atendimentos` | Sim | Lista os atendimentos |
-| POST | `/api/atendimentos` | Sim | Registra um atendimento |
+| POST | `/api/atendimentos` | Sim | Registra um atendimento (o `animal_id` precisa ser do cliente) |
 | PUT | `/api/atendimentos/:id` | Sim | Atualiza um atendimento |
 | GET | `/api/atendimentos/inativos` | Sim | Lista clientes sem atendimento há mais de 60 dias |
 | GET | `/api/status` | Não | Verifica a conexão com o banco |
@@ -142,7 +143,7 @@ Todas as rotas, exceto cadastro de usuário e login, exigem o cabeçalho `Author
 ## Próximos passos
 
 - Tela de cadastro e recuperação de senha
-- Vincular o atendimento a um animal específico
+- Ficha do cliente com seus pets e histórico de atendimentos
 - Filtros e paginação no back-end para grandes volumes de dados
 
 ## Autor

@@ -1,12 +1,28 @@
 const pool = require('../config/db');
 
+// O animal e opcional, mas se vier precisa ser do cliente informado
+async function animalPertenceAoCliente(animal_id, cliente_id) {
+    if (!animal_id) return true;
+
+    const resultado = await pool.query(
+        'SELECT 1 FROM animais WHERE id = $1 AND cliente_id = $2',
+        [animal_id, cliente_id]
+    );
+    return resultado.rows.length > 0;
+}
+
 async function criarAtendimento(req, res) {
     const { cliente_id, tipo_servico, data_atendimento, observacoes } = req.body;
+    const animal_id = req.body.animal_id || null;
 
     try {
+        if (!(await animalPertenceAoCliente(animal_id, cliente_id))) {
+            return res.status(400).json({ erro: 'Esse animal não pertence ao cliente informado.' });
+        }
+
         const resultado = await pool.query(
-            'INSERT INTO atendimentos (cliente_id, tipo_servico, data_atendimento, observacoes) VALUES ($1, $2, $3, $4) RETURNING *',
-            [cliente_id, tipo_servico, data_atendimento, observacoes]
+            'INSERT INTO atendimentos (cliente_id, animal_id, tipo_servico, data_atendimento, observacoes) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [cliente_id, animal_id, tipo_servico, data_atendimento, observacoes]
         );
         res.status(201).json(resultado.rows[0]);
     } catch (erro) {
@@ -40,11 +56,16 @@ async function listarAtendimentos(req, res) {
 async function atualizarAtendimento(req, res) {
     const { id } = req.params;
     const { cliente_id, tipo_servico, data_atendimento, observacoes } = req.body;
+    const animal_id = req.body.animal_id || null;
 
     try {
+        if (!(await animalPertenceAoCliente(animal_id, cliente_id))) {
+            return res.status(400).json({ erro: 'Esse animal não pertence ao cliente informado.' });
+        }
+
         const resultado = await pool.query(
-            'UPDATE atendimentos SET cliente_id = $1, tipo_servico = $2, data_atendimento = $3, observacoes = $4 WHERE id = $5 RETURNING *',
-            [cliente_id, tipo_servico, data_atendimento, observacoes, id]
+            'UPDATE atendimentos SET cliente_id = $1, animal_id = $2, tipo_servico = $3, data_atendimento = $4, observacoes = $5 WHERE id = $6 RETURNING *',
+            [cliente_id, animal_id, tipo_servico, data_atendimento, observacoes, id]
         );
 
         if (resultado.rows.length === 0) {

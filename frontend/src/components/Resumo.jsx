@@ -57,7 +57,7 @@ function proximosAtendimentos(atendimentos) {
         .slice(0, 5);
 }
 
-function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes }) {
+function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes, animais }) {
     const hoje = new Date();
     const atendimentosNoMes = atendimentos.filter((atendimento) => {
         const data = new Date(atendimento.data_atendimento);
@@ -70,6 +70,10 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes 
 
     function nomeDoCliente(clienteId) {
         return clientes.find((c) => c.id === clienteId)?.nome ?? `Cliente #${clienteId}`;
+    }
+
+    function nomeDoAnimal(animalId) {
+        return animais.find((a) => a.id === animalId)?.nome ?? '-';
     }
 
     return (
@@ -152,6 +156,7 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes 
                             <tr>
                                 <th>Data</th>
                                 <th>Cliente</th>
+                                <th>Pet</th>
                                 <th>Serviço</th>
                             </tr>
                         </thead>
@@ -160,6 +165,7 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes 
                                 <tr key={atendimento.id}>
                                     <td>{new Date(atendimento.data_atendimento).toLocaleDateString('pt-BR')}</td>
                                     <td>{nomeDoCliente(atendimento.cliente_id)}</td>
+                                    <td>{nomeDoAnimal(atendimento.animal_id)}</td>
                                     <td>{atendimento.tipo_servico}</td>
                                 </tr>
                             ))}

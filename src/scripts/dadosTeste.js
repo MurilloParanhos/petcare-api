@@ -116,12 +116,15 @@ async function criar() {
         }
 
         // Distribui os animais entre os clientes (alguns ficam com 2)
+        const animaisPorCliente = {};
         for (let i = 0; i < ANIMAIS.length; i++) {
             const animal = ANIMAIS[i];
-            await conexao.query(
-                'INSERT INTO animais (nome, especie, raca, idade, cliente_id) VALUES ($1, $2, $3, $4, $5)',
-                [animal.nome, animal.especie, animal.raca, animal.idade, clienteIds[i % clienteIds.length]]
+            const clienteId = clienteIds[i % clienteIds.length];
+            const resultado = await conexao.query(
+                'INSERT INTO animais (nome, especie, raca, idade, cliente_id) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+                [animal.nome, animal.especie, animal.raca, animal.idade, clienteId]
             );
+            (animaisPorCliente[clienteId] ??= []).push(resultado.rows[0].id);
         }
 
         const ativos = clienteIds.slice(0, clienteIds.length - CLIENTES_INATIVOS);
@@ -130,10 +133,11 @@ async function criar() {
         hoje.setHours(0, 0, 0, 0);
         let totalAtendimentos = 0;
 
+        // Cada atendimento vai para um dos animais do cliente
         async function inserirAtendimento(clienteId, data) {
             await conexao.query(
-                'INSERT INTO atendimentos (cliente_id, tipo_servico, data_atendimento, observacoes) VALUES ($1, $2, $3, $4)',
-                [clienteId, sortearServico(), formatarData(data), `${MARCA_TESTE} Gerado automaticamente`]
+                'INSERT INTO atendimentos (cliente_id, animal_id, tipo_servico, data_atendimento, observacoes) VALUES ($1, $2, $3, $4, $5)',
+                [clienteId, sortear(animaisPorCliente[clienteId]), sortearServico(), formatarData(data), `${MARCA_TESTE} Gerado automaticamente`]
             );
             totalAtendimentos++;
         }
