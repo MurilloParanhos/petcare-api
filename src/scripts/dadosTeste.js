@@ -50,7 +50,7 @@ const ANIMAIS = [
 const SERVICOS = [
     { nome: 'Banho e Tosa', peso: 35 },
     { nome: 'Banho', peso: 22 },
-    { nome: 'Consulta veterinaria', peso: 20 },
+    { nome: 'Consulta veterinária', peso: 20 },
     { nome: 'Vacinação', peso: 13 },
     { nome: 'Tosa higiênica', peso: 10 }
 ];
@@ -72,7 +72,7 @@ const OBSERVACOES = {
         'Unhas cortadas junto com o banho.',
         null
     ],
-    'Consulta veterinaria': [
+    'Consulta veterinária': [
         'Check-up de rotina, tudo normal.',
         'Leve otite no ouvido direito. Receitado remédio por 7 dias.',
         'Peso ideal, tutor está de parabéns com a alimentação.',
@@ -152,6 +152,16 @@ async function criar() {
     try {
         await conexao.query('BEGIN');
 
+        // Os servicos vem do catalogo (tabela servicos), que nao e dado de teste
+        const catalogo = {};
+        for (const servico of (await conexao.query('SELECT * FROM servicos')).rows) {
+            catalogo[servico.nome] = servico;
+        }
+        const faltando = SERVICOS.filter((s) => !catalogo[s.nome]).map((s) => s.nome);
+        if (faltando.length) {
+            throw new Error(`Serviços que faltam no catálogo: ${faltando.join(', ')}`);
+        }
+
         const clienteIds = [];
         for (const cliente of CLIENTES) {
             const resultado = await conexao.query(
@@ -182,12 +192,13 @@ async function criar() {
         // Cada atendimento vai para um dos animais do cliente, com uma
         // observacao combinando com o servico (ou com o agendamento)
         async function inserirAtendimento(clienteId, data, agendado = false) {
-            const servico = sortearServico();
-            const observacao = agendado ? sortear(OBSERVACOES_AGENDADO) : sortear(OBSERVACOES[servico]);
+            const servico = catalogo[sortearServico()];
+            const observacao = agendado ? sortear(OBSERVACOES_AGENDADO) : sortear(OBSERVACOES[servico.nome]);
 
             await conexao.query(
-                'INSERT INTO atendimentos (cliente_id, animal_id, tipo_servico, data_atendimento, observacoes) VALUES ($1, $2, $3, $4, $5)',
-                [clienteId, sortear(animaisPorCliente[clienteId]), servico, formatarData(data), observacao]
+                `INSERT INTO atendimentos (cliente_id, animal_id, servico_id, tipo_servico, valor, data_atendimento, observacoes)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                [clienteId, sortear(animaisPorCliente[clienteId]), servico.id, servico.nome, servico.preco, formatarData(data), observacao]
             );
             totalAtendimentos++;
         }

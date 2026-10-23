@@ -5,6 +5,7 @@ import Resumo from '../components/Resumo';
 import Clientes from '../components/Clientes';
 import Animais from '../components/Animais';
 import Atendimentos from '../components/Atendimentos';
+import Servicos from '../components/Servicos';
 
 function Dashboard({ onSair }) {
     const [aba, setAba] = useState('resumo');
@@ -12,6 +13,7 @@ function Dashboard({ onSair }) {
     const [animais, setAnimais] = useState([]);
     const [atendimentos, setAtendimentos] = useState([]);
     const [inativos, setInativos] = useState([]);
+    const [servicos, setServicos] = useState([]);
 
     async function carregarClientes() {
         try {
@@ -24,6 +26,14 @@ function Dashboard({ onSair }) {
     async function carregarAnimais() {
         try {
             setAnimais(await api('/api/animais'));
+        } catch (erro) {
+            console.error(erro);
+        }
+    }
+
+    async function carregarServicos() {
+        try {
+            setServicos(await api('/api/servicos'));
         } catch (erro) {
             console.error(erro);
         }
@@ -49,6 +59,7 @@ function Dashboard({ onSair }) {
         carregarClientes();
         carregarAnimais();
         carregarAtendimentos();
+        carregarServicos();
     }, []);
 
     return (
@@ -78,8 +89,12 @@ function Dashboard({ onSair }) {
                         inativos={inativos}
                         clientes={clientes}
                         animais={animais}
+                        servicos={servicos}
                         recarregar={carregarAtendimentos}
                     />
+                )}
+                {aba === 'servicos' && (
+                    <Servicos servicos={servicos} recarregar={carregarServicos} />
                 )}
             </main>
         </>

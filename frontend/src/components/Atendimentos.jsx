@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { api } from '../api';
-import { formatarTelefone, normalizar, paginar } from '../utils';
+import { formatarMoeda, formatarTelefone, normalizar, paginar } from '../utils';
 import Paginacao from './Paginacao';
 
-const FORM_VAZIO = { cliente_id: '', animal_id: '', tipo_servico: '', data_atendimento: '', observacoes: '' };
+const FORM_VAZIO = { cliente_id: '', animal_id: '', servico_id: '', valor: '', data_atendimento: '', observacoes: '' };
 
 const STATUS = [
     { id: 'agendados', nome: 'Agendados' },
@@ -17,7 +17,7 @@ function inicioDeHoje() {
     return hoje;
 }
 
-function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar }) {
+function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, recarregar }) {
     const [subAba, setSubAba] = useState('atendimentos');
     const [form, setForm] = useState(FORM_VAZIO);
     const [editandoId, setEditandoId] = useState(null);
@@ -66,15 +66,14 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar })
         return new Date(atendimento.data_atendimento) < inicioDeHoje();
     }
 
-    // Lista de servicos para o filtro, sem repetir "Banho" e "banho "
-    const servicos = [...new Map(
-        atendimentos.map((a) => [normalizar(a.tipo_servico), a.tipo_servico.trim()])
-    ).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+    // No formulario aparecem so os servicos ativos, mais o servico do
+    // atendimento em edicao (caso ele tenha sido desativado depois)
+    const servicosDoFormulario = servicos.filter((s) => s.ativo || s.id === Number(form.servico_id));
 
     const filtrados = atendimentos
         .filter((a) => status === 'todos' || (status === 'realizados') === jaAconteceu(a))
         .filter((a) => [nomeDoCliente(a.cliente_id), nomeDoAnimal(a.animal_id)].some((campo) => normalizar(campo).includes(normalizar(busca))))
-        .filter((a) => !servico || normalizar(a.tipo_servico) === servico)
+        .filter((a) => !servico || a.servico_id === Number(servico))
         .sort((a, b) => {
             const diferenca = new Date(a.data_atendimento) - new Date(b.data_atendimento);
             // Agendados: o mais proximo primeiro. Realizados e todos: o mais recente primeiro
@@ -101,11 +100,19 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar })
         setForm({ ...form, cliente_id: clienteId, animal_id: animalPadrao(clienteId) });
     }
 
+    // Escolher o servico preenche o valor com o preco do catalogo (pode ser alterado)
+    function escolherServico(evento) {
+        const servicoId = evento.target.value;
+        const preco = servicos.find((s) => s.id === Number(servicoId))?.preco ?? '';
+        setForm({ ...form, servico_id: servicoId, valor: preco });
+    }
+
     function editar(atendimento) {
         setForm({
             cliente_id: atendimento.cliente_id,
             animal_id: atendimento.animal_id ?? animalPadrao(atendimento.cliente_id),
-            tipo_servico: atendimento.tipo_servico,
+            servico_id: atendimento.servico_id ?? '',
+            valor: atendimento.valor ?? '',
             data_atendimento: new Date(atendimento.data_atendimento).toISOString().split('T')[0],
             observacoes: atendimento.observacoes ?? ''
         });
@@ -131,12 +138,16 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar })
         evento.preventDefault();
         setMsg('');
 
-        const { cliente_id, animal_id, data_atendimento } = form;
-        const tipo_servico = form.tipo_servico.trim();
+        const { cliente_id, animal_id, servico_id, valor, data_atendimento } = form;
         const observacoes = form.observacoes.trim();
 
-        if (!cliente_id || !tipo_servico || !data_atendimento) {
+        if (!cliente_id || !servico_id || !data_atendimento) {
             setMsg('Preencha cliente, serviço e data.');
+            return;
+        }
+
+        if (valor === '' || Number(valor) < 0) {
+            setMsg('Informe um valor válido.');
             return;
         }
 
@@ -149,7 +160,7 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar })
         const method = editandoId ? 'PUT' : 'POST';
 
         try {
-            await api(url, { method, body: { cliente_id, animal_id, tipo_servico, data_atendimento, observacoes } });
+            await api(url, { method, body: { cliente_id, animal_id, servico_id, valor, data_atendimento, observacoes } });
             cancelar();
             recarregar();
         } catch (erro) {
@@ -212,7 +223,16 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar })
                         </div>
                         <div>
                             <label htmlFor="atendimentoServico">Serviço</label>
-                            <input type="text" id="atendimentoServico" name="tipo_servico" placeholder="Ex: Banho e Tosa" value={form.tipo_servico} onChange={alterarCampo} />
+                            <select id="atendimentoServico" name="servico_id" value={form.servico_id} onChange={escolherServico}>
+                                <option value="">Selecione...</option>
+                                {servicosDoFormulario.map((s) => (
+                                    <option key={s.id} value={s.id}>{s.nome}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label htmlFor="atendimentoValor">Valor (R$)</label>
+                            <input type="number" id="atendimentoValor" name="valor" min="0" step="0.01" value={form.valor} onChange={alterarCampo} />
                         </div>
                         <div>
                             <label htmlFor="atendimentoData">Data</label>
@@ -247,8 +267,8 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar })
                         </div>
                         <select value={servico} onChange={(e) => filtrar(setServico)(e.target.value)}>
                             <option value="">Todos os serviços</option>
-                            {servicos.map(([chave, nome]) => (
-                                <option key={chave} value={chave}>{nome}</option>
+                            {servicos.map((s) => (
+                                <option key={s.id} value={s.id}>{s.nome}</option>
                             ))}
                         </select>
                     </div>
@@ -260,6 +280,7 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar })
                                 <th>Pet</th>
                                 <th>Espécie</th>
                                 <th>Serviço</th>
+                                <th>Valor</th>
                                 <th>Data</th>
                                 <th>Observações</th>
                                 <th>Ações</th>
@@ -275,6 +296,7 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar })
                                     <td>{nomeDoAnimal(atendimento.animal_id)}</td>
                                     <td>{especieDoAnimal(atendimento.animal_id)}</td>
                                     <td>{atendimento.tipo_servico}</td>
+                                    <td>{formatarMoeda(atendimento.valor)}</td>
                                     <td>{new Date(atendimento.data_atendimento).toLocaleDateString('pt-BR')}</td>
                                     <td>{atendimento.observacoes ?? '-'}</td>
                                     <td>
@@ -284,7 +306,7 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar })
                             ))}
                             {filtrados.length === 0 && (
                                 <tr>
-                                    <td colSpan="7">Nenhum atendimento encontrado com esses filtros.</td>
+                                    <td colSpan="8">Nenhum atendimento encontrado com esses filtros.</td>
                                 </tr>
                             )}
                         </tbody>

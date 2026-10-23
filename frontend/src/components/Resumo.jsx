@@ -1,4 +1,5 @@
 import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { formatarMoeda } from '../utils';
 
 // Verde das barras: da mesma familia da marca, mas vivo o bastante para ler como dado
 const COR_BARRA = '#3a8a5c';
@@ -13,20 +14,29 @@ function inicioDeHoje() {
     return hoje;
 }
 
-// Conta os atendimentos de cada um dos ultimos 6 meses (incluindo o atual)
-function atendimentosPorMes(atendimentos) {
+// Faturamento so conta o que ja foi realizado; agendamento ainda nao e dinheiro no caixa
+function jaAconteceu(atendimento) {
+    return new Date(atendimento.data_atendimento) < inicioDeHoje();
+}
+
+// Soma o faturamento e conta os atendimentos realizados
+// em cada um dos ultimos 6 meses (incluindo o atual)
+function faturamentoPorMes(atendimentos) {
     const hoje = new Date();
     const meses = [];
 
     for (let i = 5; i >= 0; i--) {
         const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-        meses.push({ ano: data.getFullYear(), mes: data.getMonth(), nome: MESES[data.getMonth()], total: 0 });
+        meses.push({ ano: data.getFullYear(), mes: data.getMonth(), nome: MESES[data.getMonth()], faturamento: 0, total: 0 });
     }
 
-    atendimentos.forEach((atendimento) => {
+    atendimentos.filter(jaAconteceu).forEach((atendimento) => {
         const data = new Date(atendimento.data_atendimento);
         const mes = meses.find((m) => m.ano === data.getFullYear() && m.mes === data.getMonth());
-        if (mes) mes.total++;
+        if (mes) {
+            mes.faturamento += Number(atendimento.valor ?? 0);
+            mes.total++;
+        }
     });
 
     return meses;
@@ -39,8 +49,9 @@ function servicosMaisProcurados(atendimentos) {
     atendimentos.forEach((atendimento) => {
         const nome = atendimento.tipo_servico.trim();
         const chave = nome.toLowerCase();
-        if (!contagem[chave]) contagem[chave] = { nome, total: 0 };
+        if (!contagem[chave]) contagem[chave] = { nome, total: 0, receita: 0 };
         contagem[chave].total++;
+        if (jaAconteceu(atendimento)) contagem[chave].receita += Number(atendimento.valor ?? 0);
     });
 
     return Object.values(contagem)
@@ -64,7 +75,9 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes,
         return data.getFullYear() === hoje.getFullYear() && data.getMonth() === hoje.getMonth();
     }).length;
 
-    const porMes = atendimentosPorMes(atendimentos);
+    const porMes = faturamentoPorMes(atendimentos);
+    const faturamentoDoMes = porMes[porMes.length - 1].faturamento;
+    const faturamentoMesPassado = porMes[porMes.length - 2].faturamento;
     const servicos = servicosMaisProcurados(atendimentos);
     const proximos = proximosAtendimentos(atendimentos);
 
@@ -94,6 +107,11 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes,
                     <h3>Atendimentos no mês</h3>
                     <p>{atendimentosNoMes}</p>
                 </div>
+                <div className="card">
+                    <h3>Faturamento do mês</h3>
+                    <p>{formatarMoeda(faturamentoDoMes)}</p>
+                    <span className="card-detalhe">Mês passado: {formatarMoeda(faturamentoMesPassado)}</span>
+                </div>
                 <div className={inativos.length > 0 ? 'card card-alerta' : 'card'}>
                     <h3>Clientes inativos</h3>
                     <p>{inativos.length}</p>
@@ -107,18 +125,24 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes,
 
             <section className="graficos">
                 <div className="painel">
-                    <h3>Atendimentos por mês</h3>
-                    <p className="painel-subtitulo">Últimos 6 meses</p>
+                    <h3>Faturamento por mês</h3>
+                    <p className="painel-subtitulo">Atendimentos realizados nos últimos 6 meses</p>
                     <ResponsiveContainer width="100%" height={240}>
-                        <BarChart data={porMes} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <BarChart data={porMes} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <CartesianGrid vertical={false} stroke={COR_GRADE} />
                             <XAxis dataKey="nome" tickLine={false} axisLine={{ stroke: COR_GRADE }} tick={{ fill: COR_TEXTO, fontSize: 12 }} />
-                            <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fill: COR_TEXTO, fontSize: 12 }} />
+                            <YAxis
+                                tickLine={false}
+                                axisLine={false}
+                                tick={{ fill: COR_TEXTO, fontSize: 12 }}
+                                tickFormatter={(valor) => (valor >= 1000 ? `${(valor / 1000).toLocaleString('pt-BR')} mil` : valor)}
+                            />
                             <Tooltip
                                 cursor={{ fill: 'rgba(0, 0, 0, 0.04)' }}
-                                formatter={(valor) => [valor, 'Atendimentos']}
+                                formatter={(valor) => [formatarMoeda(valor), 'Faturamento']}
+                                labelFormatter={(mes, itens) => `${mes} · ${itens[0]?.payload.total ?? 0} atendimentos`}
                             />
-                            <Bar dataKey="total" fill={COR_BARRA} radius={[4, 4, 0, 0]} maxBarSize={24} />
+                            <Bar dataKey="faturamento" fill={COR_BARRA} radius={[4, 4, 0, 0]} maxBarSize={24} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
@@ -136,6 +160,7 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes,
                                 <Tooltip
                                     cursor={{ fill: 'rgba(0, 0, 0, 0.04)' }}
                                     formatter={(valor) => [valor, 'Atendimentos']}
+                                    labelFormatter={(nome, itens) => `${nome} · ${formatarMoeda(itens[0]?.payload.receita ?? 0)} faturados`}
                                 />
                                 <Bar dataKey="total" fill={COR_BARRA} radius={[0, 4, 4, 0]} maxBarSize={24}>
                                     <LabelList dataKey="total" position="right" fill="#333333" fontSize={12} />

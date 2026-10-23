@@ -31,6 +31,14 @@ export function mascaraTelefone(texto) {
     return `(${numeros.slice(0, 2)}) ${numeros.slice(2, 7)}-${numeros.slice(7)}`;
 }
 
+// O PostgreSQL devolve NUMERIC como texto ("90.00"), por isso o Number()
+const formatoMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+export function formatarMoeda(valor) {
+    if (valor === null || valor === undefined || valor === '') return '-';
+    return formatoMoeda.format(Number(valor));
+}
+
 export const POR_PAGINA = 10;
 
 // Recorta a lista na pagina pedida. Se a pagina passou do fim

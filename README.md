@@ -24,15 +24,17 @@ O projeto começou com o front-end em HTML, CSS e JavaScript puro e foi migrado 
 
 ## Funcionalidades
 
-- Login com senha criptografada e token JWT (validade de 8 horas)
+- Login com senha criptografada e token JWT (validade de 8 horas), com retorno automático ao login quando a sessão expira
 - Rotas da API protegidas por middleware de autenticação
+- Catálogo de serviços com preço; serviços usados no histórico são desativados em vez de excluídos
+- Valor cobrado gravado em cada atendimento, para que reajustes de preço não alterem o faturamento passado
 - CRUD de clientes e de animais
 - Cadastro, edição e agendamento de atendimentos, vinculados ao cliente e ao pet atendido
 - Destaque visual de atendimentos realizados e agendados
 - Lista de clientes inativos (sem atendimento há mais de 60 dias), com atalho para agendar
 - Dashboard com:
-  - indicadores de clientes, animais, atendimentos no mês e clientes inativos
-  - gráfico de atendimentos dos últimos 6 meses
+  - indicadores de clientes, animais, atendimentos no mês, faturamento do mês e clientes inativos
+  - gráfico de faturamento dos últimos 6 meses
   - gráfico dos serviços mais procurados
   - lista dos próximos atendimentos
 - Busca sem distinção de acentos, filtros e paginação nas listas
@@ -135,9 +137,12 @@ Todas as rotas, exceto cadastro de usuário e login, exigem o cabeçalho `Author
 | PUT | `/api/animais/:id` | Sim | Atualiza um animal |
 | DELETE | `/api/animais/:id` | Sim | Exclui um animal |
 | GET | `/api/atendimentos` | Sim | Lista os atendimentos |
-| POST | `/api/atendimentos` | Sim | Registra um atendimento (o `animal_id` precisa ser do cliente) |
+| POST | `/api/atendimentos` | Sim | Registra um atendimento (o `animal_id` precisa ser do cliente; sem `valor`, usa o preço do serviço) |
 | PUT | `/api/atendimentos/:id` | Sim | Atualiza um atendimento |
 | GET | `/api/atendimentos/inativos` | Sim | Lista clientes sem atendimento há mais de 60 dias |
+| GET | `/api/servicos` | Sim | Lista o catálogo de serviços |
+| POST | `/api/servicos` | Sim | Cadastra um serviço |
+| PUT | `/api/servicos/:id` | Sim | Atualiza nome, preço ou ativa/desativa um serviço |
 | GET | `/api/status` | Não | Verifica a conexão com o banco |
 
 ## Próximos passos
