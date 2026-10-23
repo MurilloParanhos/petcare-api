@@ -2,9 +2,11 @@
   "name": "projeto-pet---api",
   "version": "1.0.0",
   "description": "",
- "main": "src/server.js",
-"scripts": {
+  "main": "src/server.js",
+  "scripts": {
     "start": "node src/server.js",
+    "front": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend install && npm --prefix frontend run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

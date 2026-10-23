@@ -184,16 +184,41 @@ th {
 
 .login-lado-esquerdo {
     flex: 1;
-    background-image: url('../img/Dog.png');
-    background-size: contain;
-    background-repeat: no-repeat;
     background-color: #1f3d2c;
-    background-position: left;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    gap: 30px;
     padding: 40px 40px 60px 40px;
     color: white;
+}
+
+.login-imagem {
+    flex: 1;
+    min-height: 200px;
+    position: relative;
+}
+
+/* Absoluta para a foto caber no espaco do meio sem esticar a coluna */
+.login-imagem img {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 20px;
+}
+
+.login-logo {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+/* Patinha levantada depois do "Care", igual ao logo da foto */
+.login-logo i {
+    font-size: 14px;
+    color: #8fd694;
+    transform: translateY(-6px);
 }
 
 .login-logo span {

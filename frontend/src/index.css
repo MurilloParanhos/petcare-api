@@ -1,0 +1,4 @@
+/* O body do style.css e flex; a div root precisa ocupar a largura toda */
+#root {
+    width: 100%;
+}

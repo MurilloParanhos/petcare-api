@@ -15,12 +15,12 @@ menuItens.forEach((item) => {
 const token = localStorage.getItem('token');
 
 if (!token) {
-    window.location.href = 'login.html';
+    window.location.href = '/';
 }
 
 document.getElementById('btnSair').addEventListener('click', () => {
     localStorage.removeItem('token');
-    window.location.href = 'login.html';
+    window.location.href = '/';
 });
 
 let editandoClienteId = null;
