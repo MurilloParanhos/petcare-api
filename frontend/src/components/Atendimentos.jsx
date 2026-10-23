@@ -36,6 +36,22 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar })
         return animais.find((a) => a.id === animalId)?.nome ?? '-';
     }
 
+    // Icone de cachorro ou gato ao lado da especie; outras especies so com o texto
+    function especieDoAnimal(animalId) {
+        const especie = animais.find((a) => a.id === animalId)?.especie;
+        if (!especie) return '-';
+
+        const icones = { cachorro: 'fa-dog', gato: 'fa-cat' };
+        const icone = icones[normalizar(especie)];
+
+        return (
+            <span className="especie">
+                {icone && <i className={`fa-solid ${icone}`}></i>}
+                {especie}
+            </span>
+        );
+    }
+
     function animaisDoCliente(clienteId) {
         return animais.filter((a) => a.cliente_id === Number(clienteId));
     }
@@ -242,6 +258,7 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar })
                             <tr>
                                 <th>Cliente</th>
                                 <th>Pet</th>
+                                <th>Espécie</th>
                                 <th>Serviço</th>
                                 <th>Data</th>
                                 <th>Observações</th>
@@ -256,6 +273,7 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar })
                                 >
                                     <td>{nomeDoCliente(atendimento.cliente_id)}</td>
                                     <td>{nomeDoAnimal(atendimento.animal_id)}</td>
+                                    <td>{especieDoAnimal(atendimento.animal_id)}</td>
                                     <td>{atendimento.tipo_servico}</td>
                                     <td>{new Date(atendimento.data_atendimento).toLocaleDateString('pt-BR')}</td>
                                     <td>{atendimento.observacoes ?? '-'}</td>
@@ -266,7 +284,7 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, recarregar })
                             ))}
                             {filtrados.length === 0 && (
                                 <tr>
-                                    <td colSpan="6">Nenhum atendimento encontrado com esses filtros.</td>
+                                    <td colSpan="7">Nenhum atendimento encontrado com esses filtros.</td>
                                 </tr>
                             )}
                         </tbody>

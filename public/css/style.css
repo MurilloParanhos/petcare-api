@@ -528,3 +528,13 @@ th {
     opacity: 0.4;
     cursor: default;
 }
+
+.especie {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.especie i {
+    color: #2e5940;
+}

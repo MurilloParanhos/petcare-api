@@ -3,12 +3,13 @@
 //   npm run dados-teste -- criar
 //   npm run dados-teste -- limpar
 //
-// Tudo que e criado aqui fica marcado: clientes com email @teste.petcare
-// e atendimentos com "[TESTE]" nas observacoes. A limpeza apaga so isso.
+// Os clientes criados aqui tem email @teste.petcare. A limpeza apaga esses
+// clientes junto com os animais e atendimentos deles, e nada mais.
 
 const pool = require('../config/db');
 
 const DOMINIO_TESTE = '@teste.petcare';
+// Marca usada em versoes antigas deste script; a limpeza ainda apaga quem tiver
 const MARCA_TESTE = '[TESTE]';
 
 const CLIENTES = [
@@ -52,6 +53,51 @@ const SERVICOS = [
     { nome: 'Consulta veterinaria', peso: 20 },
     { nome: 'Vacinação', peso: 13 },
     { nome: 'Tosa higiênica', peso: 10 }
+];
+
+// Observacoes de exemplo por servico. null = atendimento sem observacao
+const OBSERVACOES = {
+    'Banho e Tosa': [
+        'Ficou lindo! Tutor adorou o resultado.',
+        'Muito tranquilo durante a tosa, um amor.',
+        'Tutor pediu tosa mais curta nas patas.',
+        'Pelagem com alguns nós, foi feita desembolação.',
+        'Saiu cheiroso e com lacinho. Tutor mandou foto agradecendo.',
+        null
+    ],
+    'Banho': [
+        'Usado shampoo hipoalergênico a pedido do tutor.',
+        'Comportamento ótimo, já conhece a equipe.',
+        'Ficou um pouco agitado com o secador, mas deu tudo certo.',
+        'Unhas cortadas junto com o banho.',
+        null
+    ],
+    'Consulta veterinaria': [
+        'Check-up de rotina, tudo normal.',
+        'Leve otite no ouvido direito. Receitado remédio por 7 dias.',
+        'Peso ideal, tutor está de parabéns com a alimentação.',
+        'Retorno em 30 dias para reavaliação.',
+        'Exame de sangue solicitado, resultado sai em 3 dias.'
+    ],
+    'Vacinação': [
+        'V10 aplicada. Próxima dose em 1 ano.',
+        'Antirrábica aplicada, carteirinha atualizada.',
+        'Vacina aplicada sem reações. Muito corajoso!',
+        'Primeira dose aplicada, reforço em 21 dias.'
+    ],
+    'Tosa higiênica': [
+        'Tosa higiênica feita com cuidado, ficou ótimo.',
+        'Tutor elogiou o atendimento da equipe.',
+        null
+    ]
+};
+
+const OBSERVACOES_AGENDADO = [
+    'Confirmar horário por WhatsApp no dia anterior.',
+    'Tutor prefere atendimento pela manhã.',
+    'Vai trazer a própria toalha.',
+    'Tutor vai deixar cedo e buscar depois do almoço.',
+    null
 ];
 
 // Atendimentos em cada um dos ultimos 6 meses (do mais antigo ao atual),
@@ -133,11 +179,15 @@ async function criar() {
         hoje.setHours(0, 0, 0, 0);
         let totalAtendimentos = 0;
 
-        // Cada atendimento vai para um dos animais do cliente
-        async function inserirAtendimento(clienteId, data) {
+        // Cada atendimento vai para um dos animais do cliente, com uma
+        // observacao combinando com o servico (ou com o agendamento)
+        async function inserirAtendimento(clienteId, data, agendado = false) {
+            const servico = sortearServico();
+            const observacao = agendado ? sortear(OBSERVACOES_AGENDADO) : sortear(OBSERVACOES[servico]);
+
             await conexao.query(
                 'INSERT INTO atendimentos (cliente_id, animal_id, tipo_servico, data_atendimento, observacoes) VALUES ($1, $2, $3, $4, $5)',
-                [clienteId, sortear(animaisPorCliente[clienteId]), sortearServico(), formatarData(data), `${MARCA_TESTE} Gerado automaticamente`]
+                [clienteId, sortear(animaisPorCliente[clienteId]), servico, formatarData(data), observacao]
             );
             totalAtendimentos++;
         }
@@ -168,7 +218,7 @@ async function criar() {
         for (let i = 0; i < AGENDADOS; i++) {
             const data = new Date(hoje);
             data.setDate(data.getDate() + 1 + Math.floor(aleatorio() * 21));
-            await inserirAtendimento(sortear(ativos), data);
+            await inserirAtendimento(sortear(ativos), data, true);
         }
 
         await conexao.query('COMMIT');
