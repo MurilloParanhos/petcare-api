@@ -767,7 +767,6 @@ th {
 .agenda-extenso {
     color: #1f3d2c;
     font-weight: bold;
-    text-transform: capitalize;
     margin-left: 6px;
 }
 
@@ -824,6 +823,11 @@ th {
     transform: none;
 }
 
+/* 17:00 fica colado na ultima linha, por dentro da grade */
+.agenda-horas span.agenda-fim {
+    transform: translateY(-100%);
+}
+
 /* Linhas finas a cada 30 minutos */
 .agenda-coluna {
     position: relative;
@@ -867,7 +871,10 @@ th {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
+/* Cada linha do bloco mantem a propria altura (sem espremer) e corta com "..." */
+.agenda-bloco strong,
 .agenda-bloco span {
+    flex-shrink: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

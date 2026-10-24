@@ -69,9 +69,11 @@ function Agenda({ atendimentos, clientes, animais, servicos, profissionais, muda
     const minutosAgora = agora.getHours() * 60 + agora.getMinutes();
     const mostrarAgora = data === hoje && minutosAgora >= ABERTURA && minutosAgora <= FECHAMENTO;
 
-    const dataPorExtenso = new Date(`${data}T00:00:00`).toLocaleDateString('pt-BR', {
+    // "segunda-feira, 26 de outubro de 2026" -> so a primeira letra maiuscula
+    const extenso = new Date(`${data}T00:00:00`).toLocaleDateString('pt-BR', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
+    const dataPorExtenso = extenso.charAt(0).toUpperCase() + extenso.slice(1);
 
     return (
         <div>
@@ -113,6 +115,9 @@ function Agenda({ atendimentos, clientes, animais, servicos, profissionais, muda
                                 {horaTexto(inicio)}
                             </span>
                         ))}
+                        <span className="agenda-fim" style={{ top: FAIXAS.length * ALTURA_DA_FAIXA }}>
+                            {horaTexto(FECHAMENTO)}
+                        </span>
                     </div>
 
                     {equipe.map((p) => (
@@ -129,21 +134,28 @@ function Agenda({ atendimentos, clientes, animais, servicos, profissionais, muda
                                 </button>
                             ))}
 
-                            {naGrade.filter((a) => a.profissional_id === p.id).map((a) => (
-                                <button
-                                    key={a.id}
-                                    className={`agenda-bloco ${STATUS_DO_ATENDIMENTO[a.status].classe} ${a.id === selecionadoId ? 'selecionado' : ''}`}
-                                    style={{
-                                        top: (emMinutos(a.hora_atendimento) - ABERTURA) / INTERVALO * ALTURA_DA_FAIXA,
-                                        height: duracao(a) / INTERVALO * ALTURA_DA_FAIXA - 4
-                                    }}
-                                    onClick={() => setSelecionadoId(a.id)}
-                                >
-                                    <strong>{faixaDeHorario(a, servicos)}</strong>
-                                    <span>{nomeDoCliente(a.cliente_id)}{nomeDoAnimal(a.animal_id) && ` · ${nomeDoAnimal(a.animal_id)}`}</span>
-                                    <span>{a.tipo_servico}</span>
-                                </button>
-                            ))}
+                            {naGrade.filter((a) => a.profissional_id === p.id).map((a) => {
+                                const clienteEPet = `${nomeDoCliente(a.cliente_id)}${nomeDoAnimal(a.animal_id) ? ` · ${nomeDoAnimal(a.animal_id)}` : ''}`;
+                                // Bloco de 30 min so tem espaco para 2 linhas: o servico sobe para a linha do horario
+                                const curto = duracao(a) <= INTERVALO;
+
+                                return (
+                                    <button
+                                        key={a.id}
+                                        className={`agenda-bloco ${STATUS_DO_ATENDIMENTO[a.status].classe} ${a.id === selecionadoId ? 'selecionado' : ''}`}
+                                        style={{
+                                            top: (emMinutos(a.hora_atendimento) - ABERTURA) / INTERVALO * ALTURA_DA_FAIXA,
+                                            height: duracao(a) / INTERVALO * ALTURA_DA_FAIXA - 4
+                                        }}
+                                        onClick={() => setSelecionadoId(a.id)}
+                                        title={`${faixaDeHorario(a, servicos)} · ${a.tipo_servico} · ${clienteEPet}`}
+                                    >
+                                        <strong>{faixaDeHorario(a, servicos)}{curto && ` · ${a.tipo_servico}`}</strong>
+                                        <span>{clienteEPet}</span>
+                                        {!curto && <span>{a.tipo_servico}</span>}
+                                    </button>
+                                );
+                            })}
 
                             {mostrarAgora && (
                                 <div className="agenda-agora" style={{ top: (minutosAgora - ABERTURA) / INTERVALO * ALTURA_DA_FAIXA }}></div>
