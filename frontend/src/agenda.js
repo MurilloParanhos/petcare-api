@@ -1,21 +1,29 @@
-// Regras da agenda: funcionamento das 09:00 as 17:00, horarios de 30 em 30 min,
-// pausa para almoco das 12:00 as 13:00 e fechado aos domingos.
+// Regras da agenda: horario de funcionamento, intervalo entre horarios,
+// pausa para almoco e dias fechados. Elas vem de shared/regrasAgenda.json,
+// o mesmo arquivo que a API usa para validar (um lugar so para mudar).
 // Cada profissional tem a sua agenda: dois atendimentos no mesmo horario
 // sao possiveis se forem com profissionais diferentes.
 // Os horarios sao trabalhados em minutos desde a meia-noite (09:00 = 540).
-// A API confere as mesmas regras em src/controllers/atendimentoController.js.
+import regras from '../../shared/regrasAgenda.json';
 
-export const ABERTURA = 9 * 60;
-export const FECHAMENTO = 17 * 60;
-export const INTERVALO = 30;
-export const ALMOCO_INICIO = 12 * 60;
-export const ALMOCO_FIM = 13 * 60;
+export const ABERTURA = emMinutos(regras.abertura);
+export const FECHAMENTO = emMinutos(regras.fechamento);
+export const INTERVALO = regras.intervaloMinutos;
+export const ALMOCO_INICIO = emMinutos(regras.almoco.inicio);
+export const ALMOCO_FIM = emMinutos(regras.almoco.fim);
 // Dias da semana sem atendimento (0 = domingo, como no getDay() do JavaScript)
-export const DIAS_FECHADOS = [0];
+export const DIAS_FECHADOS = regras.diasFechados;
+
+const NOMES_DOS_DIAS = ['domingos', 'segundas', 'terças', 'quartas', 'quintas', 'sextas', 'sábados'];
 
 // "2026-11-01" e domingo? -> true
 export function diaFechado(data) {
     return DIAS_FECHADOS.includes(new Date(`${data}T00:00:00`).getDay());
+}
+
+// "Fechado aos domingos" (ou aos dias que estiverem configurados)
+export function textoDiasFechados() {
+    return DIAS_FECHADOS.map((dia) => NOMES_DOS_DIAS[dia]).join(' e ');
 }
 
 // O atendimento [inicio, fim) pega algum pedaco do almoco?

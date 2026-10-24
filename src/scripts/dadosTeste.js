@@ -7,6 +7,8 @@
 // clientes junto com os animais e atendimentos deles, e nada mais.
 
 const pool = require('../config/db');
+// Mesmas regras de horario da API e do front
+const regras = require('../../shared/regrasAgenda.json');
 
 const DOMINIO_TESTE = '@teste.petcare';
 // Marca usada em versoes antigas deste script; a limpeza ainda apaga quem tiver
@@ -197,10 +199,11 @@ async function criar() {
 
         // Proximo horario livre de cada profissional em cada dia, em minutos.
         // Comeca depois dos atendimentos que ja existem, para nao encavalar.
-        const ABERTURA = 9 * 60;
-        const FECHAMENTO = 17 * 60;
-        const ALMOCO_INICIO = 12 * 60;
-        const ALMOCO_FIM = 13 * 60;
+        const emMinutos = (hora) => Number(hora.slice(0, 2)) * 60 + Number(hora.slice(3, 5));
+        const ABERTURA = emMinutos(regras.abertura);
+        const FECHAMENTO = emMinutos(regras.fechamento);
+        const ALMOCO_INICIO = emMinutos(regras.almoco.inicio);
+        const ALMOCO_FIM = emMinutos(regras.almoco.fim);
         const proximoLivre = {};
         const ocupados = await conexao.query(
             `SELECT to_char(a.data_atendimento, 'YYYY-MM-DD') AS dia, a.profissional_id,
@@ -253,10 +256,10 @@ async function criar() {
                 }
             }
 
-            // Domingo fechado: passa para segunda. Dia lotado: passa para o dia seguinte
+            // Dia fechado (domingo) ou lotado: passa para o dia seguinte
             let dia = formatarData(data);
             let escolhido = melhorProfissional(servico.funcao, dia, servico.duracao_minutos);
-            while (data.getDay() === 0 || escolhido.inicio + servico.duracao_minutos > FECHAMENTO) {
+            while (regras.diasFechados.includes(data.getDay()) || escolhido.inicio + servico.duracao_minutos > FECHAMENTO) {
                 data.setDate(data.getDate() + 1);
                 dia = formatarData(data);
                 escolhido = melhorProfissional(servico.funcao, dia, servico.duracao_minutos);

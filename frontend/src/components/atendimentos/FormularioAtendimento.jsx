@@ -1,4 +1,4 @@
-import { diaFechado, STATUS_DO_ATENDIMENTO } from '../../agenda';
+import { diaFechado, STATUS_DO_ATENDIMENTO, textoDiasFechados } from '../../agenda';
 import CampoData from '../CampoData';
 import CampoSelecao from '../CampoSelecao';
 
@@ -69,7 +69,7 @@ function FormularioAtendimento({ formulario, clientes }) {
                     buscavel={false}
                     placeholder={!form.data_atendimento || !form.servico_id
                         ? 'Escolha serviço e data'
-                        : diaFechado(form.data_atendimento) ? 'Fechado aos domingos' : 'Dia lotado'}
+                        : diaFechado(form.data_atendimento) ? `Fechado aos ${textoDiasFechados()}` : 'Dia lotado'}
                 />
             </div>
             <div>

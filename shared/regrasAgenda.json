@@ -1,0 +1,7 @@
+{
+    "abertura": "09:00",
+    "fechamento": "17:00",
+    "almoco": { "inicio": "12:00", "fim": "13:00" },
+    "diasFechados": [0],
+    "intervaloMinutos": 30
+}

@@ -1,20 +1,22 @@
 const pool = require('../config/db');
-
-// Horario de funcionamento, em minutos desde a meia-noite (09:00 e 17:00),
-// pausa para almoco e dias fechados. O front usa as mesmas regras em
-// frontend/src/agenda.js.
-const ABERTURA = 9 * 60;
-const FECHAMENTO = 17 * 60;
-const ALMOCO_INICIO = 12 * 60;
-const ALMOCO_FIM = 13 * 60;
-const DIAS_FECHADOS = [0]; // 0 = domingo
-
-const STATUS = ['agendado', 'concluido', 'cancelado', 'faltou'];
+// Horario de funcionamento, almoco e dias fechados. O mesmo arquivo e lido
+// pelo front (frontend/src/agenda.js), entao a regra fica num lugar so.
+const regras = require('../../shared/regrasAgenda.json');
 
 function emMinutos(hora) {
     const [h, m] = hora.split(':').map(Number);
     return h * 60 + m;
 }
+
+// Horarios em minutos desde a meia-noite (09:00 = 540)
+const ABERTURA = emMinutos(regras.abertura);
+const FECHAMENTO = emMinutos(regras.fechamento);
+const ALMOCO_INICIO = emMinutos(regras.almoco.inicio);
+const ALMOCO_FIM = emMinutos(regras.almoco.fim);
+const DIAS_FECHADOS = regras.diasFechados; // 0 = domingo, como no getDay()
+const NOMES_DOS_DIAS = ['domingos', 'segundas', 'terças', 'quartas', 'quintas', 'sextas', 'sábados'];
+
+const STATUS = ['agendado', 'concluido', 'cancelado', 'faltou'];
 
 // Data (Date) no fuso do servidor, no formato do banco ("2026-11-02")
 function dataISO(data) {
@@ -29,11 +31,12 @@ function hojeISO() {
 
 // Confere almoco e dia fechado. Devolve a mensagem de erro ou null.
 function foraDoFuncionamento(data, inicio, duracao) {
-    if (DIAS_FECHADOS.includes(new Date(`${data}T00:00:00`).getDay())) {
-        return 'O pet shop não abre aos domingos. Escolha outra data.';
+    const diaDaSemana = new Date(`${data}T00:00:00`).getDay();
+    if (DIAS_FECHADOS.includes(diaDaSemana)) {
+        return `O pet shop não abre aos ${NOMES_DOS_DIAS[diaDaSemana]}. Escolha outra data.`;
     }
     if (inicio < ALMOCO_FIM && ALMOCO_INICIO < inicio + duracao) {
-        return 'Esse horário pega o almoço (12:00 às 13:00). Escolha outro horário.';
+        return `Esse horário pega o almoço (${regras.almoco.inicio} às ${regras.almoco.fim}). Escolha outro horário.`;
     }
     return null;
 }
@@ -129,7 +132,7 @@ async function prepararAtendimento(corpo, { novo, id = 0 }) {
 
     const inicio = emMinutos(hora_atendimento);
     if (inicio < ABERTURA || inicio + servico.duracao_minutos > FECHAMENTO) {
-        return { erro: `Esse serviço dura ${servico.duracao_minutos} min e precisa caber entre 09:00 e 17:00.` };
+        return { erro: `Esse serviço dura ${servico.duracao_minutos} min e precisa caber entre ${regras.abertura} e ${regras.fechamento}.` };
     }
 
     // Almoco e domingo valem para atendimentos novos e para remarcacoes.

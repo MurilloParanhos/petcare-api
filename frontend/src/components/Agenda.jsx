@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { formatarMoeda, formatarTelefone } from '../utils';
 import {
     ABERTURA, ALMOCO_FIM, ALMOCO_INICIO, FECHAMENTO, INTERVALO, NOMES_DAS_FUNCOES, STATUS_DO_ATENDIMENTO,
-    dataISO, diaFechado, emMinutos, faixaDeHorario, horaTexto, pegaOAlmoco
+    dataISO, diaFechado, emMinutos, faixaDeHorario, horaTexto, pegaOAlmoco, textoDiasFechados
 } from '../agenda';
 import CampoData from './CampoData';
 
@@ -165,7 +165,7 @@ function Agenda({ atendimentos, clientes, animais, servicos, profissionais, muda
 
             {fechado && (
                 <p className="agenda-aviso">
-                    <i className="fa-solid fa-store-slash"></i> O pet shop não abre aos domingos. Não é possível agendar nesse dia.
+                    <i className="fa-solid fa-store-slash"></i> O pet shop não abre aos {textoDiasFechados()}. Não é possível agendar nesse dia.
                 </p>
             )}
 

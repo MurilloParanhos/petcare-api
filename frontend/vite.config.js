@@ -8,6 +8,8 @@ const express = 'http://localhost:3000';
 export default defineConfig({
     plugins: [react()],
     server: {
+        // Deixa o front importar a pasta shared/ (regras da agenda), que fica fora de frontend/
+        fs: { allow: ['..'] },
         proxy: {
             '/api': express,
             '/css': express,
