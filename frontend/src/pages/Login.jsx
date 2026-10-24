@@ -1,7 +1,12 @@
 import { useState } from 'react';
 
+// Email guardado no navegador quando "Lembrar meu usuario" esta marcado
+const CHAVE_USUARIO_LEMBRADO = 'usuarioLembrado';
+
 function Login({ aviso, onEntrar }) {
-    const [email, setEmail] = useState('');
+    const [email, setEmail] = useState(() => localStorage.getItem(CHAVE_USUARIO_LEMBRADO) ?? '');
+    const [lembrar, setLembrar] = useState(() => Boolean(localStorage.getItem(CHAVE_USUARIO_LEMBRADO)));
+    const [mostrarAjudaSenha, setMostrarAjudaSenha] = useState(false);
     const [senha, setSenha] = useState('');
     const [mostrarSenha, setMostrarSenha] = useState(false);
     const [mensagemErro, setMensagemErro] = useState(aviso ?? '');
@@ -24,6 +29,11 @@ function Login({ aviso, onEntrar }) {
             }
 
             localStorage.setItem('token', dados.token);
+            if (lembrar) {
+                localStorage.setItem(CHAVE_USUARIO_LEMBRADO, email);
+            } else {
+                localStorage.removeItem(CHAVE_USUARIO_LEMBRADO);
+            }
             onEntrar();
 
         } catch (erro) {
@@ -86,11 +96,24 @@ function Login({ aviso, onEntrar }) {
 
                     <div className="login-opcoes">
                         <label className="lembrar-usuario">
-                            <input type="checkbox" />
+                            <input type="checkbox" checked={lembrar} onChange={(e) => setLembrar(e.target.checked)} />
                             Lembrar meu usuário
                         </label>
-                        <a href="#" className="esqueceu-senha">Esqueceu sua senha?</a>
+                        <button type="button" className="esqueceu-senha" onClick={() => setMostrarAjudaSenha(!mostrarAjudaSenha)}>
+                            Esqueceu sua senha?
+                        </button>
                     </div>
+
+                    {/* O sistema nao envia email; a senha e redefinida pelo administrador */}
+                    {mostrarAjudaSenha && (
+                        <p className="login-ajuda">
+                            <i className="fa-solid fa-circle-info"></i>
+                            <span>
+                                Peça ao administrador do sistema para redefinir sua senha. Ele faz isso com o
+                                comando <code>npm run redefinir-senha -- seu@email.com</code>.
+                            </span>
+                        </p>
+                    )}
 
                     <button type="submit">Entrar</button>
                 </form>

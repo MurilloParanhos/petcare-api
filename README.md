@@ -51,7 +51,8 @@ As imagens usam apenas dados fictícios, gerados pelo script `npm run dados-test
 
 ## Funcionalidades
 
-- Login com senha criptografada e token JWT (validade de 8 horas), com retorno automático ao login quando a sessão expira
+- Login com senha criptografada e token JWT (validade de 8 horas), com retorno automático ao login quando a sessão expira e opção de lembrar o usuário
+- Validação dos dados também na API (não só no formulário), com mensagens claras
 - Rotas da API protegidas por middleware de autenticação
 - Catálogo de serviços com preço; serviços usados no histórico são desativados em vez de excluídos
 - Valor cobrado gravado em cada atendimento, para que reajustes de preço não alterem o faturamento passado
@@ -85,6 +86,8 @@ As imagens usam apenas dados fictícios, gerados pelo script `npm run dados-test
 │       ├── pages/          # Login e Dashboard
 │       └── components/     # Abas e componentes reutilizáveis
 ├── public/                 # CSS e imagens
+├── shared/
+│   └── regrasAgenda.json   # Expediente, almoço e dias fechados (lido pela API e pelo front)
 ├── src/                    # API Express
 │   ├── config/             # Conexão com o banco
 │   ├── controllers/
@@ -102,9 +105,11 @@ As imagens usam apenas dados fictícios, gerados pelo script `npm run dados-test
 npm test
 ```
 
-São 28 testes de integração (Jest e Supertest) que chamam a API de verdade e cobrem:
+São 44 testes de integração (Jest e Supertest) que chamam a API de verdade e cobrem:
 
 - autenticação: sem token, token falso, token vencido, cadastro e login;
+- usuários: email único (sem diferenciar maiúsculas) e senha mínima;
+- clientes e animais: validações e exclusão bloqueada com mensagem clara quando há pets ou atendimentos;
 - catálogo de serviços: cadastro e validações (preço, duração, função, nome repetido);
 - regras da agenda: horário ocupado, mesmo horário com outro profissional, profissional de outra função, fora do expediente, almoço e domingo;
 - status: cancelar libera o horário e reabrir um cancelado cujo horário foi ocupado é recusado;
@@ -201,7 +206,7 @@ Todas as rotas, exceto cadastro de usuário e login, exigem o cabeçalho `Author
 
 ## Próximos passos
 
-- Tela de cadastro e recuperação de senha
+- Tela de cadastro de usuários e recuperação de senha por email
 - Ficha do cliente com seus pets e histórico de atendimentos
 - Filtros e paginação no back-end para grandes volumes de dados
 
