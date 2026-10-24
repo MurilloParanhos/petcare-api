@@ -114,6 +114,7 @@ function Dashboard({ onSair }) {
                         animais={animais}
                         servicos={servicos}
                         profissionais={profissionais}
+                        onVerAtendimentos={() => setAba('atendimentos')}
                     />
                 )}
                 {aba === 'agenda' && (

@@ -66,16 +66,19 @@ function servicosMaisProcurados(atendimentos) {
         .slice(0, 5);
 }
 
-function proximosAtendimentos(atendimentos) {
+// Quantos dos proximos atendimentos aparecem no card (o resto fica em Atendimentos)
+const LIMITE_DE_PROXIMOS = 8;
+
+// Todos os agendados de hoje em diante, do mais proximo para o mais distante
+function agendadosDaquiPraFrente(atendimentos) {
     const hoje = dataISO(new Date());
 
     return atendimentos
         .filter((atendimento) => atendimento.status === 'agendado' && dataISO(atendimento.data_atendimento) >= hoje)
-        .sort((a, b) => chaveDeOrdem(a).localeCompare(chaveDeOrdem(b)))
-        .slice(0, 5);
+        .sort((a, b) => chaveDeOrdem(a).localeCompare(chaveDeOrdem(b)));
 }
 
-function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes, animais, servicos, profissionais }) {
+function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes, animais, servicos, profissionais, onVerAtendimentos }) {
     const atendimentosNoMes = atendimentos.filter((a) => doMesAtual(a) && contaComoAtendimento(a)).length;
     const perdidosNoMes = atendimentos.filter((a) => doMesAtual(a) && !contaComoAtendimento(a)).length;
 
@@ -83,7 +86,8 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes,
     const faturamentoDoMes = porMes[porMes.length - 1].faturamento;
     const faturamentoMesPassado = porMes[porMes.length - 2].faturamento;
     const maisProcurados = servicosMaisProcurados(atendimentos);
-    const proximos = proximosAtendimentos(atendimentos);
+    const agendados = agendadosDaquiPraFrente(atendimentos);
+    const proximos = agendados.slice(0, LIMITE_DE_PROXIMOS);
 
     function nomeDoCliente(clienteId) {
         return clientes.find((c) => c.id === clienteId)?.nome ?? `Cliente #${clienteId}`;
@@ -177,7 +181,19 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes,
             </section>
 
             <section className="painel">
-                <h3>Próximos atendimentos</h3>
+                <div className="painel-topo">
+                    <div>
+                        <h3>Próximos atendimentos</h3>
+                        {agendados.length > 0 && (
+                            <p className="painel-subtitulo">
+                                {agendados.length > proximos.length
+                                    ? `Mostrando os ${proximos.length} mais próximos de ${agendados.length} agendados`
+                                    : `${agendados.length} agendado(s)`}
+                            </p>
+                        )}
+                    </div>
+                    <button className="btn-secundario" onClick={onVerAtendimentos}>Ver todos</button>
+                </div>
                 {proximos.length === 0 ? (
                     <p className="painel-vazio">Nenhum atendimento agendado.</p>
                 ) : (
