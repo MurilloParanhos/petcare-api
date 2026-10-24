@@ -8,6 +8,31 @@ O PetCare permite cadastrar clientes e seus animais, registrar e agendar atendim
 
 O projeto começou com o front-end em HTML, CSS e JavaScript puro e foi migrado para React, mantendo a mesma API.
 
+## Telas
+
+As imagens usam apenas dados fictícios, gerados pelo script `npm run dados-teste`.
+
+**Dashboard**: indicadores, faturamento dos últimos 6 meses, serviços mais procurados e próximos atendimentos.
+
+![Dashboard](docs/prints/dashboard.png)
+
+**Agenda do dia**: uma coluna por profissional, blocos do tamanho de cada serviço, cores por status, faixa da semana e pausa para almoço.
+
+![Agenda do dia](docs/prints/agenda.png)
+
+**Atendimentos**: formulário com sugestão automática de horário e profissional, filtros por status e serviço e ações rápidas.
+
+![Atendimentos](docs/prints/atendimentos.png)
+
+<details>
+<summary>Mais telas: login e catálogo de serviços</summary>
+
+![Login](docs/prints/login.png)
+
+![Serviços](docs/prints/servicos.png)
+
+</details>
+
 ## Tecnologias
 
 **Back-end**
@@ -16,6 +41,7 @@ O projeto começou com o front-end em HTML, CSS e JavaScript puro e foi migrado 
 - bcrypt (criptografia de senha)
 - jsonwebtoken (autenticação JWT)
 - dotenv
+- Jest e Supertest (testes automatizados da API)
 
 **Front-end**
 - React
@@ -49,21 +75,42 @@ O projeto começou com o front-end em HTML, CSS e JavaScript puro e foi migrado 
 ├── database/
 │   ├── schema.sql          # Criação das tabelas
 │   └── migrations/         # Alterações em bancos já existentes
+├── docs/prints/            # Imagens das telas usadas neste README
 ├── frontend/               # Aplicação React (Vite)
 │   └── src/
 │       ├── api.js          # fetch com token JWT
-│       ├── utils.js        # busca e paginação
+│       ├── agenda.js       # Regras da agenda (horários livres, almoço, domingo)
+│       ├── utils.js        # Busca, paginação, telefone e moeda
+│       ├── hooks/          # Lógica reaproveitável (formulário de atendimento)
 │       ├── pages/          # Login e Dashboard
 │       └── components/     # Abas e componentes reutilizáveis
 ├── public/                 # CSS e imagens
-└── src/                    # API Express
-    ├── config/             # Conexão com o banco
-    ├── controllers/
-    ├── middlewares/        # Autenticação
-    ├── routes/
-    ├── scripts/            # Utilitários de linha de comando
-    └── server.js
+├── src/                    # API Express
+│   ├── config/             # Conexão com o banco
+│   ├── controllers/
+│   ├── middlewares/        # Autenticação
+│   ├── routes/
+│   ├── scripts/            # Utilitários de linha de comando
+│   ├── app.js              # Monta o Express (usado pelo servidor e pelos testes)
+│   └── server.js           # Abre a porta
+└── tests/                  # Testes automatizados da API
 ```
+
+## Testes
+
+```
+npm test
+```
+
+São 28 testes de integração (Jest e Supertest) que chamam a API de verdade e cobrem:
+
+- autenticação: sem token, token falso, token vencido, cadastro e login;
+- catálogo de serviços: cadastro e validações (preço, duração, função, nome repetido);
+- regras da agenda: horário ocupado, mesmo horário com outro profissional, profissional de outra função, fora do expediente, almoço e domingo;
+- status: cancelar libera o horário e reabrir um cancelado cujo horário foi ocupado é recusado;
+- clientes inativos.
+
+Os testes rodam em um schema separado do PostgreSQL (`testes_petcare`), recriado a partir do `database/schema.sql` a cada execução. Assim, eles nunca alteram os dados reais.
 
 ## Como rodar localmente
 
@@ -119,6 +166,7 @@ O projeto começou com o front-end em HTML, CSS e JavaScript puro e foi migrado 
 | `npm start` | Inicia a API |
 | `npm run front` | Inicia o React em modo desenvolvimento |
 | `npm run build` | Gera a versão de produção do React em `frontend/dist` |
+| `npm test` | Roda os testes automatizados da API |
 | `npm run dados-teste -- criar` | Cria clientes, animais e atendimentos fictícios para popular o dashboard |
 | `npm run dados-teste -- limpar` | Apaga somente os dados fictícios criados pelo comando acima |
 | `npm run redefinir-senha -- email@exemplo.com` | Define uma nova senha para um usuário |
