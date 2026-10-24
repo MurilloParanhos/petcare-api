@@ -9,7 +9,7 @@
     "build": "npm --prefix frontend install && npm --prefix frontend run build",
     "redefinir-senha": "node src/scripts/redefinirSenha.js",
     "dados-teste": "node src/scripts/dadosTeste.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --runInBand"
   },
   "keywords": [],
   "author": "",
@@ -21,5 +21,9 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "jest": "^30.5.2",
+    "supertest": "^7.3.1"
   }
 }
