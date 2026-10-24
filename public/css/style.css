@@ -143,7 +143,9 @@ th {
     align-items: flex-end;
 }
 
-.formulario div {
+/* So os blocos de campo (filhos diretos); as divs internas dos
+   componentes de data e de selecao tem o layout delas */
+.formulario > div {
     display: flex;
     flex-direction: column;
 }
@@ -659,4 +661,13 @@ th {
     color: #3a8a5c;
     width: 18px;
     text-align: center;
+}
+
+/* O campo de busca interno do react-select nao deve herdar a borda e o
+   espacamento dos inputs do formulario e dos filtros */
+.formulario .campo-selecao input,
+.filtros .campo-selecao input {
+    padding: 0;
+    border: none;
+    min-width: 0;
 }

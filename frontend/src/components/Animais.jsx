@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { api } from '../api';
 import { normalizar, paginar } from '../utils';
 import Paginacao from './Paginacao';
+import CampoSelecao from './CampoSelecao';
 
 const FORM_VAZIO = { nome: '', especie: '', raca: '', idade: '', cliente_id: '' };
 
@@ -125,12 +126,13 @@ function Animais({ animais, clientes, recarregar }) {
                 </div>
                 <div>
                     <label htmlFor="animalCliente">Dono</label>
-                    <select id="animalCliente" name="cliente_id" value={form.cliente_id} onChange={alterarCampo}>
-                        <option value="">Selecione...</option>
-                        {clientes.map((cliente) => (
-                            <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>
-                        ))}
-                    </select>
+                    <CampoSelecao
+                        id="animalCliente"
+                        valor={form.cliente_id}
+                        opcoes={clientes.map((c) => ({ valor: c.id, rotulo: c.nome }))}
+                        onChange={(valor) => setForm({ ...form, cliente_id: valor })}
+                        placeholder="Digite ou escolha..."
+                    />
                 </div>
                 <button type="submit">{editandoId ? 'Salvar edição' : 'Adicionar animal'}</button>
                 {editandoId && <button type="button" onClick={cancelar}>Cancelar</button>}
@@ -144,12 +146,16 @@ function Animais({ animais, clientes, recarregar }) {
                     value={busca}
                     onChange={(e) => filtrar(setBusca)(e.target.value)}
                 />
-                <select value={especie} onChange={(e) => filtrar(setEspecie)(e.target.value)}>
-                    <option value="">Todas as espécies</option>
-                    {especies.map(([chave, nome]) => (
-                        <option key={chave} value={chave}>{nome}</option>
-                    ))}
-                </select>
+                <CampoSelecao
+                    id="filtroEspecie"
+                    valor={especie}
+                    opcoes={[
+                        { valor: '', rotulo: 'Todas as espécies' },
+                        ...especies.map(([chave, nome]) => ({ valor: chave, rotulo: nome }))
+                    ]}
+                    onChange={filtrar(setEspecie)}
+                    buscavel={false}
+                />
             </div>
 
             <table>

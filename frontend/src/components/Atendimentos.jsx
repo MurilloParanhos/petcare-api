@@ -4,6 +4,7 @@ import { formatarMoeda, formatarTelefone, normalizar, paginar } from '../utils';
 import { chaveDeOrdem, dataISO, faixaDeHorario, horariosLivres, profissionaisLivres } from '../agenda';
 import Paginacao from './Paginacao';
 import CampoData from './CampoData';
+import CampoSelecao from './CampoSelecao';
 
 const FORM_VAZIO = {
     cliente_id: '', animal_id: '', servico_id: '', valor: '',
@@ -171,15 +172,18 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, pro
         setForm({ ...form, [evento.target.name]: evento.target.value });
     }
 
+    // Para os campos de selecao, que entregam o valor direto (sem evento)
+    function definirCampo(nome, valor) {
+        setForm({ ...form, [nome]: valor });
+    }
+
     // Trocar o cliente limpa o animal, porque o animal anterior era de outro dono
-    function escolherCliente(evento) {
-        const clienteId = evento.target.value;
+    function escolherCliente(clienteId) {
         setForm({ ...form, cliente_id: clienteId, animal_id: animalPadrao(clienteId) });
     }
 
     // Escolher o servico preenche o valor com o preco do catalogo (pode ser alterado)
-    function escolherServico(evento) {
-        const servicoId = evento.target.value;
+    function escolherServico(servicoId) {
         const preco = servicos.find((s) => s.id === Number(servicoId))?.preco ?? '';
         setForm(comAgendaSugerida({ ...form, servico_id: servicoId, valor: preco }));
     }
@@ -190,8 +194,8 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, pro
     }
 
     // Trocar o horario mantem o profissional se ele estiver livre; se nao, troca por outro
-    function escolherHora(evento) {
-        setForm(comAgendaSugerida({ ...form, hora_atendimento: evento.target.value }));
+    function escolherHora(hora) {
+        setForm(comAgendaSugerida({ ...form, hora_atendimento: hora }));
     }
 
     function editar(atendimento) {
@@ -290,42 +294,37 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, pro
                     <form className="formulario" onSubmit={salvar}>
                         <div>
                             <label htmlFor="atendimentoCliente">Cliente</label>
-                            <select id="atendimentoCliente" name="cliente_id" value={form.cliente_id} onChange={escolherCliente}>
-                                <option value="">Selecione...</option>
-                                {clientes.map((cliente) => (
-                                    <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>
-                                ))}
-                            </select>
+                            <CampoSelecao
+                                id="atendimentoCliente"
+                                valor={form.cliente_id}
+                                opcoes={clientes.map((c) => ({ valor: c.id, rotulo: c.nome }))}
+                                onChange={escolherCliente}
+                                placeholder="Digite ou escolha..."
+                            />
                         </div>
                         <div>
                             <label htmlFor="atendimentoAnimal">Pet</label>
-                            <select
+                            <CampoSelecao
                                 id="atendimentoAnimal"
-                                name="animal_id"
-                                value={form.animal_id}
-                                onChange={alterarCampo}
-                                disabled={animaisDoCliente(form.cliente_id).length === 0}
-                            >
-                                <option value="">
-                                    {!form.cliente_id
-                                        ? 'Escolha o cliente'
-                                        : animaisDoCliente(form.cliente_id).length === 0
-                                            ? 'Cliente sem pets'
-                                            : 'Selecione...'}
-                                </option>
-                                {animaisDoCliente(form.cliente_id).map((animal) => (
-                                    <option key={animal.id} value={animal.id}>{animal.nome}</option>
-                                ))}
-                            </select>
+                                valor={form.animal_id}
+                                opcoes={animaisDoCliente(form.cliente_id).map((a) => ({ valor: a.id, rotulo: a.nome }))}
+                                onChange={(valor) => definirCampo('animal_id', valor)}
+                                desabilitado={animaisDoCliente(form.cliente_id).length === 0}
+                                buscavel={false}
+                                placeholder={!form.cliente_id
+                                    ? 'Escolha o cliente'
+                                    : animaisDoCliente(form.cliente_id).length === 0 ? 'Cliente sem pets' : 'Selecione...'}
+                            />
                         </div>
                         <div>
                             <label htmlFor="atendimentoServico">Serviço</label>
-                            <select id="atendimentoServico" name="servico_id" value={form.servico_id} onChange={escolherServico}>
-                                <option value="">Selecione...</option>
-                                {servicosDoFormulario.map((s) => (
-                                    <option key={s.id} value={s.id}>{s.nome}</option>
-                                ))}
-                            </select>
+                            <CampoSelecao
+                                id="atendimentoServico"
+                                valor={form.servico_id}
+                                opcoes={servicosDoFormulario.map((s) => ({ valor: s.id, rotulo: s.nome }))}
+                                onChange={escolherServico}
+                                buscavel={false}
+                            />
                         </div>
                         <div>
                             <label htmlFor="atendimentoValor">Valor (R$)</label>
@@ -337,37 +336,27 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, pro
                         </div>
                         <div>
                             <label htmlFor="atendimentoHora">Horário</label>
-                            <select
+                            <CampoSelecao
                                 id="atendimentoHora"
-                                name="hora_atendimento"
-                                value={form.hora_atendimento}
+                                valor={form.hora_atendimento}
+                                opcoes={horariosDoFormulario.map((hora) => ({ valor: hora, rotulo: hora }))}
                                 onChange={escolherHora}
-                                disabled={horariosDoFormulario.length === 0}
-                            >
-                                {horariosDoFormulario.length === 0 && (
-                                    <option value="">
-                                        {!form.data_atendimento || !form.servico_id ? 'Escolha serviço e data' : 'Dia lotado'}
-                                    </option>
-                                )}
-                                {horariosDoFormulario.map((hora) => (
-                                    <option key={hora} value={hora}>{hora}</option>
-                                ))}
-                            </select>
+                                desabilitado={horariosDoFormulario.length === 0}
+                                buscavel={false}
+                                placeholder={!form.data_atendimento || !form.servico_id ? 'Escolha serviço e data' : 'Dia lotado'}
+                            />
                         </div>
                         <div>
                             <label htmlFor="atendimentoProfissional">Profissional</label>
-                            <select
+                            <CampoSelecao
                                 id="atendimentoProfissional"
-                                name="profissional_id"
-                                value={form.profissional_id}
-                                onChange={alterarCampo}
-                                disabled={profissionaisDoFormulario.length === 0}
-                            >
-                                {profissionaisDoFormulario.length === 0 && <option value="">-</option>}
-                                {profissionaisDoFormulario.map((p) => (
-                                    <option key={p.id} value={p.id}>{p.nome}</option>
-                                ))}
-                            </select>
+                                valor={form.profissional_id}
+                                opcoes={profissionaisDoFormulario.map((p) => ({ valor: p.id, rotulo: p.nome }))}
+                                onChange={(valor) => definirCampo('profissional_id', valor)}
+                                desabilitado={profissionaisDoFormulario.length === 0}
+                                buscavel={false}
+                                placeholder="-"
+                            />
                         </div>
                         <div>
                             <label htmlFor="atendimentoObs">Observações</label>
@@ -396,12 +385,16 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, pro
                                 </button>
                             ))}
                         </div>
-                        <select value={servico} onChange={(e) => filtrar(setServico)(e.target.value)}>
-                            <option value="">Todos os serviços</option>
-                            {servicos.map((s) => (
-                                <option key={s.id} value={s.id}>{s.nome}</option>
-                            ))}
-                        </select>
+                        <CampoSelecao
+                            id="filtroServico"
+                            valor={servico}
+                            opcoes={[
+                                { valor: '', rotulo: 'Todos os serviços' },
+                                ...servicos.map((s) => ({ valor: s.id, rotulo: s.nome }))
+                            ]}
+                            onChange={filtrar(setServico)}
+                            buscavel={false}
+                        />
                     </div>
 
                     <table>

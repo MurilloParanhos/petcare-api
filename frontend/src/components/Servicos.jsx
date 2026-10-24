@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { api } from '../api';
 import { formatarMoeda } from '../utils';
 import { NOMES_DAS_FUNCOES } from '../agenda';
+import CampoSelecao from './CampoSelecao';
 
 const FORM_VAZIO = { nome: '', preco: '', duracao_minutos: '60', funcao: 'tosador' };
 
@@ -99,11 +100,13 @@ function Servicos({ servicos, profissionais, recarregar }) {
                 </div>
                 <div>
                     <label htmlFor="servicoFuncao">Realizado por</label>
-                    <select id="servicoFuncao" name="funcao" value={form.funcao} onChange={alterarCampo}>
-                        {Object.entries(NOMES_DAS_FUNCOES).map(([funcao, nome]) => (
-                            <option key={funcao} value={funcao}>{nome}</option>
-                        ))}
-                    </select>
+                    <CampoSelecao
+                        id="servicoFuncao"
+                        valor={form.funcao}
+                        opcoes={Object.entries(NOMES_DAS_FUNCOES).map(([funcao, nome]) => ({ valor: funcao, rotulo: nome }))}
+                        onChange={(valor) => setForm({ ...form, funcao: valor })}
+                        buscavel={false}
+                    />
                 </div>
                 <button type="submit">{editando ? 'Salvar edição' : 'Adicionar serviço'}</button>
                 {editando && <button type="button" onClick={cancelar}>Cancelar</button>}
