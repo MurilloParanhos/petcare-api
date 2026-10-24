@@ -1,7 +1,9 @@
 const pool = require('../config/db');
 
-// Confere nome, preco e duracao antes de salvar; devolve a mensagem de erro ou null
-function validarServico(nome, preco, duracao_minutos) {
+const FUNCOES = ['tosador', 'veterinario'];
+
+// Confere nome, preco, duracao e funcao antes de salvar; devolve a mensagem de erro ou null
+function validarServico(nome, preco, duracao_minutos, funcao) {
     if (!nome || !nome.trim()) {
         return 'Informe o nome do serviço.';
     }
@@ -10,6 +12,9 @@ function validarServico(nome, preco, duracao_minutos) {
     }
     if (!Number.isInteger(Number(duracao_minutos)) || Number(duracao_minutos) <= 0) {
         return 'Informe a duração em minutos (número inteiro maior que zero).';
+    }
+    if (!FUNCOES.includes(funcao)) {
+        return 'Informe quem realiza o serviço: tosador ou veterinario.';
     }
     return null;
 }
@@ -27,16 +32,17 @@ async function listarServicos(req, res) {
 async function criarServico(req, res) {
     const { nome, preco } = req.body;
     const duracao_minutos = req.body.duracao_minutos ?? 60;
+    const funcao = req.body.funcao ?? 'tosador';
 
-    const erroValidacao = validarServico(nome, preco, duracao_minutos);
+    const erroValidacao = validarServico(nome, preco, duracao_minutos, funcao);
     if (erroValidacao) {
         return res.status(400).json({ erro: erroValidacao });
     }
 
     try {
         const resultado = await pool.query(
-            'INSERT INTO servicos (nome, preco, duracao_minutos) VALUES ($1, $2, $3) RETURNING *',
-            [nome.trim(), preco, duracao_minutos]
+            'INSERT INTO servicos (nome, preco, duracao_minutos, funcao) VALUES ($1, $2, $3, $4) RETURNING *',
+            [nome.trim(), preco, duracao_minutos, funcao]
         );
         res.status(201).json(resultado.rows[0]);
     } catch (erro) {
@@ -53,17 +59,17 @@ async function criarServico(req, res) {
 // para tirar do catalogo, ele e desativado com ativo = false
 async function atualizarServico(req, res) {
     const { id } = req.params;
-    const { nome, preco, ativo, duracao_minutos } = req.body;
+    const { nome, preco, ativo, duracao_minutos, funcao } = req.body;
 
-    const erroValidacao = validarServico(nome, preco, duracao_minutos);
+    const erroValidacao = validarServico(nome, preco, duracao_minutos, funcao);
     if (erroValidacao) {
         return res.status(400).json({ erro: erroValidacao });
     }
 
     try {
         const resultado = await pool.query(
-            'UPDATE servicos SET nome = $1, preco = $2, ativo = $3, duracao_minutos = $4 WHERE id = $5 RETURNING *',
-            [nome.trim(), preco, ativo ?? true, duracao_minutos, id]
+            'UPDATE servicos SET nome = $1, preco = $2, ativo = $3, duracao_minutos = $4, funcao = $5 WHERE id = $6 RETURNING *',
+            [nome.trim(), preco, ativo ?? true, duracao_minutos, funcao, id]
         );
 
         if (resultado.rows.length === 0) {

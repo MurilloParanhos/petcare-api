@@ -189,43 +189,62 @@ async function criar() {
         hoje.setHours(0, 0, 0, 0);
         let totalAtendimentos = 0;
 
-        // Proximo horario livre de cada dia, em minutos. Comeca depois dos
-        // atendimentos que ja existem no banco, para nao encavalar com eles.
+        // Os profissionais tambem vem do banco, agrupados por funcao
+        const profissionaisPorFuncao = {};
+        for (const p of (await conexao.query('SELECT * FROM profissionais WHERE ativo ORDER BY id')).rows) {
+            (profissionaisPorFuncao[p.funcao] ??= []).push(p.id);
+        }
+
+        // Proximo horario livre de cada profissional em cada dia, em minutos.
+        // Comeca depois dos atendimentos que ja existem, para nao encavalar.
         const ABERTURA = 9 * 60;
         const FECHAMENTO = 17 * 60;
         const proximoLivre = {};
         const ocupados = await conexao.query(
-            `SELECT to_char(a.data_atendimento, 'YYYY-MM-DD') AS dia,
+            `SELECT to_char(a.data_atendimento, 'YYYY-MM-DD') AS dia, a.profissional_id,
                     MAX(EXTRACT(EPOCH FROM a.hora_atendimento) / 60 + s.duracao_minutos) AS fim
              FROM atendimentos a JOIN servicos s ON s.id = a.servico_id
-             WHERE a.hora_atendimento IS NOT NULL
-             GROUP BY 1`
+             WHERE a.hora_atendimento IS NOT NULL AND a.profissional_id IS NOT NULL
+             GROUP BY 1, 2`
         );
-        ocupados.rows.forEach((linha) => { proximoLivre[linha.dia] = Number(linha.fim); });
+        ocupados.rows.forEach((linha) => {
+            proximoLivre[`${linha.dia}|${linha.profissional_id}`] = Number(linha.fim);
+        });
 
         function horaTexto(minutos) {
             return `${String(Math.floor(minutos / 60)).padStart(2, '0')}:${String(minutos % 60).padStart(2, '0')}`;
         }
 
-        // Cada atendimento vai para um dos animais do cliente, no proximo
-        // horario livre do dia (se o dia lotou, passa para o dia seguinte),
+        // Entre os profissionais da funcao, escolhe quem fica livre mais cedo no dia;
+        // no empate, quem atendeu menos ate agora (para dividir o trabalho)
+        const atendidosPor = {};
+        function melhorProfissional(funcao, dia) {
+            return profissionaisPorFuncao[funcao]
+                .map((id) => ({ id, inicio: proximoLivre[`${dia}|${id}`] ?? ABERTURA }))
+                .sort((a, b) => a.inicio - b.inicio || (atendidosPor[a.id] ?? 0) - (atendidosPor[b.id] ?? 0))[0];
+        }
+
+        // Cada atendimento vai para um dos animais do cliente, com o profissional
+        // livre mais cedo (se o dia lotou para todos, passa para o dia seguinte),
         // com uma observacao combinando com o servico (ou com o agendamento)
         async function inserirAtendimento(clienteId, data, agendado = false) {
             const servico = catalogo[sortearServico()];
             const observacao = agendado ? sortear(OBSERVACOES_AGENDADO) : sortear(OBSERVACOES[servico.nome]);
 
             let dia = formatarData(data);
-            while ((proximoLivre[dia] ?? ABERTURA) + servico.duracao_minutos > FECHAMENTO) {
+            let escolhido = melhorProfissional(servico.funcao, dia);
+            while (escolhido.inicio + servico.duracao_minutos > FECHAMENTO) {
                 data.setDate(data.getDate() + 1);
                 dia = formatarData(data);
+                escolhido = melhorProfissional(servico.funcao, dia);
             }
-            const inicio = proximoLivre[dia] ?? ABERTURA;
-            proximoLivre[dia] = inicio + servico.duracao_minutos;
+            proximoLivre[`${dia}|${escolhido.id}`] = escolhido.inicio + servico.duracao_minutos;
+            atendidosPor[escolhido.id] = (atendidosPor[escolhido.id] ?? 0) + 1;
 
             await conexao.query(
-                `INSERT INTO atendimentos (cliente_id, animal_id, servico_id, tipo_servico, valor, data_atendimento, hora_atendimento, observacoes)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-                [clienteId, sortear(animaisPorCliente[clienteId]), servico.id, servico.nome, servico.preco, dia, horaTexto(inicio), observacao]
+                `INSERT INTO atendimentos (cliente_id, animal_id, servico_id, profissional_id, tipo_servico, valor, data_atendimento, hora_atendimento, observacoes)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+                [clienteId, sortear(animaisPorCliente[clienteId]), servico.id, escolhido.id, servico.nome, servico.preco, dia, horaTexto(escolhido.inicio), observacao]
             );
             totalAtendimentos++;
         }

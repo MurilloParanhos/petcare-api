@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { api } from '../api';
 import { formatarMoeda } from '../utils';
+import { NOMES_DAS_FUNCOES } from '../agenda';
 
-const FORM_VAZIO = { nome: '', preco: '', duracao_minutos: '60' };
+const FORM_VAZIO = { nome: '', preco: '', duracao_minutos: '60', funcao: 'tosador' };
 
-function Servicos({ servicos, recarregar }) {
+function Servicos({ servicos, profissionais, recarregar }) {
     const [form, setForm] = useState(FORM_VAZIO);
     const [editando, setEditando] = useState(null);
     const [msg, setMsg] = useState('');
@@ -14,7 +15,12 @@ function Servicos({ servicos, recarregar }) {
     }
 
     function editar(servico) {
-        setForm({ nome: servico.nome, preco: servico.preco, duracao_minutos: servico.duracao_minutos });
+        setForm({
+            nome: servico.nome,
+            preco: servico.preco,
+            duracao_minutos: servico.duracao_minutos,
+            funcao: servico.funcao
+        });
         setEditando(servico);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -30,7 +36,7 @@ function Servicos({ servicos, recarregar }) {
         setMsg('');
 
         const nome = form.nome.trim();
-        const { preco, duracao_minutos } = form;
+        const { preco, duracao_minutos, funcao } = form;
 
         if (!nome || preco === '' || !duracao_minutos) {
             setMsg('Preencha o nome, o preço e a duração.');
@@ -39,9 +45,12 @@ function Servicos({ servicos, recarregar }) {
 
         try {
             if (editando) {
-                await api(`/api/servicos/${editando.id}`, { method: 'PUT', body: { nome, preco, duracao_minutos, ativo: editando.ativo } });
+                await api(`/api/servicos/${editando.id}`, {
+                    method: 'PUT',
+                    body: { nome, preco, duracao_minutos, funcao, ativo: editando.ativo }
+                });
             } else {
-                await api('/api/servicos', { method: 'POST', body: { nome, preco, duracao_minutos } });
+                await api('/api/servicos', { method: 'POST', body: { nome, preco, duracao_minutos, funcao } });
             }
             cancelar();
             recarregar();
@@ -56,7 +65,13 @@ function Servicos({ servicos, recarregar }) {
         try {
             await api(`/api/servicos/${servico.id}`, {
                 method: 'PUT',
-                body: { nome: servico.nome, preco: servico.preco, duracao_minutos: servico.duracao_minutos, ativo: !servico.ativo }
+                body: {
+                    nome: servico.nome,
+                    preco: servico.preco,
+                    duracao_minutos: servico.duracao_minutos,
+                    funcao: servico.funcao,
+                    ativo: !servico.ativo
+                }
             });
             recarregar();
         } catch (erro) {
@@ -82,6 +97,14 @@ function Servicos({ servicos, recarregar }) {
                     <label htmlFor="servicoDuracao">Duração (min)</label>
                     <input type="number" id="servicoDuracao" name="duracao_minutos" min="15" step="15" value={form.duracao_minutos} onChange={alterarCampo} />
                 </div>
+                <div>
+                    <label htmlFor="servicoFuncao">Realizado por</label>
+                    <select id="servicoFuncao" name="funcao" value={form.funcao} onChange={alterarCampo}>
+                        {Object.entries(NOMES_DAS_FUNCOES).map(([funcao, nome]) => (
+                            <option key={funcao} value={funcao}>{nome}</option>
+                        ))}
+                    </select>
+                </div>
                 <button type="submit">{editando ? 'Salvar edição' : 'Adicionar serviço'}</button>
                 {editando && <button type="button" onClick={cancelar}>Cancelar</button>}
                 <p className="erro">{msg}</p>
@@ -93,6 +116,7 @@ function Servicos({ servicos, recarregar }) {
                         <th>Serviço</th>
                         <th>Preço</th>
                         <th>Duração</th>
+                        <th>Realizado por</th>
                         <th>Situação</th>
                         <th>Ações</th>
                     </tr>
@@ -103,6 +127,7 @@ function Servicos({ servicos, recarregar }) {
                             <td>{servico.nome}</td>
                             <td>{formatarMoeda(servico.preco)}</td>
                             <td>{servico.duracao_minutos} min</td>
+                            <td>{NOMES_DAS_FUNCOES[servico.funcao]}</td>
                             <td>{servico.ativo ? 'Ativo' : 'Desativado'}</td>
                             <td>
                                 <button className="btn-editar" onClick={() => editar(servico)}>Editar</button>
@@ -117,11 +142,29 @@ function Servicos({ servicos, recarregar }) {
                     ))}
                     {servicos.length === 0 && (
                         <tr>
-                            <td colSpan="5">Nenhum serviço cadastrado.</td>
+                            <td colSpan="6">Nenhum serviço cadastrado.</td>
                         </tr>
                     )}
                 </tbody>
             </table>
+
+            <h2>Equipe</h2>
+            <p className="subtitulo-aba">Cada profissional tem a sua agenda; dois atendimentos no mesmo horário vão para profissionais diferentes.</p>
+            <section className="equipe">
+                {Object.entries(NOMES_DAS_FUNCOES).map(([funcao, nome]) => (
+                    <div key={funcao} className="painel">
+                        <h3>{nome}</h3>
+                        <ul>
+                            {profissionais.filter((p) => p.funcao === funcao).map((p) => (
+                                <li key={p.id}>
+                                    <i className={`fa-solid ${funcao === 'veterinario' ? 'fa-user-doctor' : 'fa-scissors'}`}></i>
+                                    {p.nome}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ))}
+            </section>
         </div>
     );
 }

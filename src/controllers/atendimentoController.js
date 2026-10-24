@@ -15,12 +15,12 @@ function emMinutos(hora) {
 // atendimento antigo, um servico que foi desativado depois ainda vale.
 // O id (ao editar) serve para o atendimento nao conflitar com ele mesmo.
 async function prepararAtendimento(corpo, { novo, id = 0 }) {
-    const { cliente_id, servico_id, data_atendimento, hora_atendimento } = corpo;
+    const { cliente_id, servico_id, profissional_id, data_atendimento, hora_atendimento } = corpo;
     const animal_id = corpo.animal_id || null;
     const observacoes = corpo.observacoes || null;
 
-    if (!cliente_id || !servico_id || !data_atendimento || !hora_atendimento) {
-        return { erro: 'Informe cliente, serviço, data e horário.' };
+    if (!cliente_id || !servico_id || !profissional_id || !data_atendimento || !hora_atendimento) {
+        return { erro: 'Informe cliente, serviço, profissional, data e horário.' };
     }
 
     if (!/^\d{2}:\d{2}(:\d{2})?$/.test(hora_atendimento)) {
@@ -44,6 +44,19 @@ async function prepararAtendimento(corpo, { novo, id = 0 }) {
         return { erro: 'Serviço inválido ou desativado.' };
     }
 
+    // O profissional precisa ser da funcao que realiza o servico
+    // (tosador faz banho e tosa, veterinario faz consulta e vacina)
+    const profissionalResultado = await pool.query('SELECT * FROM profissionais WHERE id = $1', [profissional_id]);
+    const profissional = profissionalResultado.rows[0];
+
+    if (!profissional || (novo && !profissional.ativo)) {
+        return { erro: 'Profissional inválido ou inativo.' };
+    }
+
+    if (profissional.funcao !== servico.funcao) {
+        return { erro: `${profissional.nome} não realiza ${servico.nome}.` };
+    }
+
     // Sem valor informado, cobra o preco do catalogo
     const valor = corpo.valor === undefined || corpo.valor === null || corpo.valor === ''
         ? servico.preco
@@ -58,26 +71,28 @@ async function prepararAtendimento(corpo, { novo, id = 0 }) {
         return { erro: `Esse serviço dura ${servico.duracao_minutos} min e precisa caber entre 09:00 e 17:00.` };
     }
 
-    // Dois intervalos se sobrepoem quando um comeca antes do outro terminar
+    // Confere a agenda do profissional escolhido: dois intervalos se
+    // sobrepoem quando um comeca antes do outro terminar
     const conflito = await pool.query(
         `SELECT to_char(a.hora_atendimento, 'HH24:MI') AS hora, a.tipo_servico
          FROM atendimentos a
          JOIN servicos s ON s.id = a.servico_id
          WHERE a.data_atendimento = $1
-           AND a.id <> $2
-           AND a.hora_atendimento < $3::time + make_interval(mins => $4)
-           AND a.hora_atendimento + make_interval(mins => s.duracao_minutos) > $3::time
+           AND a.profissional_id = $2
+           AND a.id <> $3
+           AND a.hora_atendimento < $4::time + make_interval(mins => $5)
+           AND a.hora_atendimento + make_interval(mins => s.duracao_minutos) > $4::time
          LIMIT 1`,
-        [data_atendimento, id, hora_atendimento, servico.duracao_minutos]
+        [data_atendimento, profissional.id, id, hora_atendimento, servico.duracao_minutos]
     );
 
     if (conflito.rows.length > 0) {
         const { hora, tipo_servico } = conflito.rows[0];
-        return { erro: `Horário ocupado: já existe ${tipo_servico} às ${hora} nesse dia.` };
+        return { erro: `Horário ocupado: ${profissional.nome} já tem ${tipo_servico} às ${hora} nesse dia.` };
     }
 
     return {
-        dados: [cliente_id, animal_id, servico.id, servico.nome, valor, data_atendimento, hora_atendimento, observacoes]
+        dados: [cliente_id, animal_id, servico.id, servico.nome, valor, data_atendimento, hora_atendimento, observacoes, profissional.id]
     };
 }
 
@@ -89,8 +104,8 @@ async function criarAtendimento(req, res) {
         }
 
         const resultado = await pool.query(
-            `INSERT INTO atendimentos (cliente_id, animal_id, servico_id, tipo_servico, valor, data_atendimento, hora_atendimento, observacoes)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+            `INSERT INTO atendimentos (cliente_id, animal_id, servico_id, tipo_servico, valor, data_atendimento, hora_atendimento, observacoes, profissional_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
             dados
         );
         res.status(201).json(resultado.rows[0]);
@@ -134,8 +149,8 @@ async function atualizarAtendimento(req, res) {
         const resultado = await pool.query(
             `UPDATE atendimentos
              SET cliente_id = $1, animal_id = $2, servico_id = $3, tipo_servico = $4, valor = $5,
-                 data_atendimento = $6, hora_atendimento = $7, observacoes = $8
-             WHERE id = $9 RETURNING *`,
+                 data_atendimento = $6, hora_atendimento = $7, observacoes = $8, profissional_id = $9
+             WHERE id = $10 RETURNING *`,
             [...dados, id]
         );
 

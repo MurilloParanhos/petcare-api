@@ -1,9 +1,13 @@
 // Regras da agenda: funcionamento das 09:00 as 17:00, horarios de 30 em 30 min.
+// Cada profissional tem a sua agenda: dois atendimentos no mesmo horario
+// sao possiveis se forem com profissionais diferentes.
 // Os horarios sao trabalhados em minutos desde a meia-noite (09:00 = 540).
 
 export const ABERTURA = 9 * 60;
 export const FECHAMENTO = 17 * 60;
 export const INTERVALO = 30;
+
+export const NOMES_DAS_FUNCOES = { tosador: 'Banho e tosa', veterinario: 'Veterinária' };
 
 // "09:30" ou "09:30:00" (formato do PostgreSQL) -> 570
 export function emMinutos(hora) {
@@ -30,22 +34,42 @@ function duracaoDoServico(servicos, servicoId) {
     return servicos.find((s) => s.id === Number(servicoId))?.duracao_minutos ?? 60;
 }
 
-// Horarios em que um servico com essa duracao cabe no dia sem encavalar
-// com outro atendimento. ignorarId: o atendimento que esta sendo editado.
-export function horariosLivres({ data, duracao, atendimentos, servicos, ignorarId }) {
-    const ocupados = atendimentos
-        .filter((a) => a.id !== ignorarId && a.hora_atendimento && dataISO(a.data_atendimento) === data)
+// Intervalos ja ocupados na agenda de um profissional nesse dia
+function ocupadosDoProfissional({ data, profissionalId, atendimentos, servicos, ignorarId }) {
+    return atendimentos
+        .filter((a) =>
+            a.id !== ignorarId &&
+            a.profissional_id === profissionalId &&
+            a.hora_atendimento &&
+            dataISO(a.data_atendimento) === data
+        )
         .map((a) => {
             const inicio = emMinutos(a.hora_atendimento);
             return [inicio, inicio + duracaoDoServico(servicos, a.servico_id)];
         });
+}
 
+// Profissionais (da lista recebida) que estao livres nesse horario
+export function profissionaisLivres({ data, hora, duracao, profissionais, atendimentos, servicos, ignorarId }) {
+    const inicio = emMinutos(hora);
+    const fim = inicio + duracao;
+
+    return profissionais.filter((p) => {
+        const ocupados = ocupadosDoProfissional({ data, profissionalId: p.id, atendimentos, servicos, ignorarId });
+        // Dois intervalos se sobrepoem quando um comeca antes do outro terminar
+        return !ocupados.some(([oInicio, oFim]) => inicio < oFim && oInicio < fim);
+    });
+}
+
+// Horarios em que pelo menos um dos profissionais esta livre durante todo o servico.
+// ignorarId: o atendimento que esta sendo editado.
+export function horariosLivres({ data, duracao, profissionais, atendimentos, servicos, ignorarId }) {
     const livres = [];
     for (let inicio = ABERTURA; inicio + duracao <= FECHAMENTO; inicio += INTERVALO) {
-        const fim = inicio + duracao;
-        // Dois intervalos se sobrepoem quando um comeca antes do outro terminar
-        const sobrepoe = ocupados.some(([oInicio, oFim]) => inicio < oFim && oInicio < fim);
-        if (!sobrepoe) livres.push(horaTexto(inicio));
+        const hora = horaTexto(inicio);
+        if (profissionaisLivres({ data, hora, duracao, profissionais, atendimentos, servicos, ignorarId }).length > 0) {
+            livres.push(hora);
+        }
     }
     return livres;
 }

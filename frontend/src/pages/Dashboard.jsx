@@ -14,6 +14,7 @@ function Dashboard({ onSair }) {
     const [atendimentos, setAtendimentos] = useState([]);
     const [inativos, setInativos] = useState([]);
     const [servicos, setServicos] = useState([]);
+    const [profissionais, setProfissionais] = useState([]);
 
     async function carregarClientes() {
         try {
@@ -34,6 +35,14 @@ function Dashboard({ onSair }) {
     async function carregarServicos() {
         try {
             setServicos(await api('/api/servicos'));
+        } catch (erro) {
+            console.error(erro);
+        }
+    }
+
+    async function carregarProfissionais() {
+        try {
+            setProfissionais(await api('/api/profissionais'));
         } catch (erro) {
             console.error(erro);
         }
@@ -60,6 +69,7 @@ function Dashboard({ onSair }) {
         carregarAnimais();
         carregarAtendimentos();
         carregarServicos();
+        carregarProfissionais();
     }, []);
 
     return (
@@ -76,6 +86,7 @@ function Dashboard({ onSair }) {
                         clientes={clientes}
                         animais={animais}
                         servicos={servicos}
+                        profissionais={profissionais}
                     />
                 )}
                 {aba === 'clientes' && (
@@ -91,11 +102,12 @@ function Dashboard({ onSair }) {
                         clientes={clientes}
                         animais={animais}
                         servicos={servicos}
+                        profissionais={profissionais}
                         recarregar={carregarAtendimentos}
                     />
                 )}
                 {aba === 'servicos' && (
-                    <Servicos servicos={servicos} recarregar={carregarServicos} />
+                    <Servicos servicos={servicos} profissionais={profissionais} recarregar={carregarServicos} />
                 )}
             </main>
         </>
