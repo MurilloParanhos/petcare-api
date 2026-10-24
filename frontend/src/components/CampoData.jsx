@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { ptBR } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -9,16 +10,28 @@ registerLocale('pt-BR', ptBR);
 // que nao deixa mudar o tamanho das letras. Recebe e devolve "2026-11-02".
 // bloquearFechados: nao deixa escolher os dias em que o pet shop nao abre.
 function CampoData({ id, valor, onChange, bloquearFechados = false }) {
-    // "2026-11-02" -> Date local (new Date("2026-11-02") seria meia-noite UTC)
-    const selecionada = valor ? new Date(`${valor}T00:00:00`) : null;
+    // "2026-11-02" -> Date local (new Date("2026-11-02") seria meia-noite UTC).
+    // O useMemo mantem o mesmo objeto enquanto o valor nao muda: um Date novo
+    // a cada render fazia o calendario achar que a data mudou e entrar em loop
+    // quando a data era digitada.
+    const selecionada = useMemo(() => (valor ? new Date(`${valor}T00:00:00`) : null), [valor]);
+
+    function aoMudar(data) {
+        const novoValor = data ? dataISO(data) : '';
+        // So avisa quando a data realmente mudou
+        if (novoValor !== (valor ?? '')) onChange(novoValor);
+    }
 
     return (
         <DatePicker
             id={id}
             selected={selecionada}
-            onChange={(data) => onChange(data ? dataISO(data) : '')}
+            onChange={aoMudar}
             locale="pt-BR"
             dateFormat="dd/MM/yyyy"
+            // So aceita a data digitada quando ela esta completa (dd/mm/aaaa),
+            // em vez de tentar entender cada pedaco ("0", "03", "03/1"...)
+            strictParsing
             placeholderText="dd/mm/aaaa"
             autoComplete="off"
             filterDate={bloquearFechados ? (data) => !DIAS_FECHADOS.includes(data.getDay()) : undefined}
