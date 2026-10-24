@@ -67,7 +67,7 @@ function Servicos({ servicos, recarregar }) {
     return (
         <div>
             <h2>Serviços</h2>
-            <p className="subtitulo-inativos">Preços usados como padrão ao registrar um atendimento.</p>
+            <p className="subtitulo-aba">Preços usados como padrão ao registrar um atendimento.</p>
 
             <form className="formulario" onSubmit={salvar}>
                 <div>
