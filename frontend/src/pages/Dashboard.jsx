@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import Sidebar from '../components/Sidebar';
 import Resumo from '../components/Resumo';
+import Agenda from '../components/Agenda';
 import Clientes from '../components/Clientes';
 import Animais from '../components/Animais';
 import Atendimentos from '../components/Atendimentos';
@@ -15,6 +16,8 @@ function Dashboard({ onSair }) {
     const [inativos, setInativos] = useState([]);
     const [servicos, setServicos] = useState([]);
     const [profissionais, setProfissionais] = useState([]);
+    // Dados que a Agenda manda para o formulario de Atendimentos (data, hora e profissional)
+    const [preenchimento, setPreenchimento] = useState(null);
 
     async function carregarClientes() {
         try {
@@ -63,6 +66,24 @@ function Dashboard({ onSair }) {
         }
     }
 
+    // Botoes Concluir, Faltou, Cancelar e Reabrir (usados na Agenda e em Atendimentos)
+    async function mudarStatus(atendimento, novoStatus) {
+        if (novoStatus === 'cancelado' && !confirm('Cancelar esse atendimento? O horário fica livre na agenda.')) return;
+
+        try {
+            await api(`/api/atendimentos/${atendimento.id}/status`, { method: 'PATCH', body: { status: novoStatus } });
+            carregarAtendimentos();
+        } catch (erro) {
+            alert(erro.message);
+        }
+    }
+
+    // Clique num horario livre da Agenda: vai para Atendimentos com o formulario preenchido
+    function agendarPelaAgenda(dados) {
+        setPreenchimento(dados);
+        setAba('atendimentos');
+    }
+
     // Roda uma vez quando o dashboard aparece na tela
     useEffect(() => {
         carregarClientes();
@@ -89,6 +110,17 @@ function Dashboard({ onSair }) {
                         profissionais={profissionais}
                     />
                 )}
+                {aba === 'agenda' && (
+                    <Agenda
+                        atendimentos={atendimentos}
+                        clientes={clientes}
+                        animais={animais}
+                        servicos={servicos}
+                        profissionais={profissionais}
+                        mudarStatus={mudarStatus}
+                        onAgendar={agendarPelaAgenda}
+                    />
+                )}
                 {aba === 'clientes' && (
                     <Clientes clientes={clientes} recarregar={carregarClientes} />
                 )}
@@ -104,6 +136,9 @@ function Dashboard({ onSair }) {
                         servicos={servicos}
                         profissionais={profissionais}
                         recarregar={carregarAtendimentos}
+                        mudarStatus={mudarStatus}
+                        preenchimento={preenchimento}
+                        onPreenchido={() => setPreenchimento(null)}
                     />
                 )}
                 {aba === 'servicos' && (

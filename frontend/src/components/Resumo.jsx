@@ -1,6 +1,6 @@
 import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { formatarMoeda } from '../utils';
-import { chaveDeOrdem, faixaDeHorario } from '../agenda';
+import { chaveDeOrdem, dataISO, faixaDeHorario } from '../agenda';
 
 // Verde das barras: da mesma familia da marca, mas vivo o bastante para ler como dado
 const COR_BARRA = '#3a8a5c';
@@ -9,18 +9,24 @@ const COR_TEXTO = '#666666';
 
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
-function inicioDeHoje() {
+// Faturamento so conta o que foi concluido: agendamento ainda nao e dinheiro
+// no caixa, e cancelamento ou falta nao geram receita
+function foiConcluido(atendimento) {
+    return atendimento.status === 'concluido';
+}
+
+// Cancelados e faltas nao contam como atendimento feito ou marcado
+function contaComoAtendimento(atendimento) {
+    return atendimento.status === 'concluido' || atendimento.status === 'agendado';
+}
+
+function doMesAtual(atendimento) {
     const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    return hoje;
+    const data = new Date(atendimento.data_atendimento);
+    return data.getFullYear() === hoje.getFullYear() && data.getMonth() === hoje.getMonth();
 }
 
-// Faturamento so conta o que ja foi realizado; agendamento ainda nao e dinheiro no caixa
-function jaAconteceu(atendimento) {
-    return new Date(atendimento.data_atendimento) < inicioDeHoje();
-}
-
-// Soma o faturamento e conta os atendimentos realizados
+// Soma o faturamento e conta os atendimentos concluidos
 // em cada um dos ultimos 6 meses (incluindo o atual)
 function faturamentoPorMes(atendimentos) {
     const hoje = new Date();
@@ -31,7 +37,7 @@ function faturamentoPorMes(atendimentos) {
         meses.push({ ano: data.getFullYear(), mes: data.getMonth(), nome: MESES[data.getMonth()], faturamento: 0, total: 0 });
     }
 
-    atendimentos.filter(jaAconteceu).forEach((atendimento) => {
+    atendimentos.filter(foiConcluido).forEach((atendimento) => {
         const data = new Date(atendimento.data_atendimento);
         const mes = meses.find((m) => m.ano === data.getFullYear() && m.mes === data.getMonth());
         if (mes) {
@@ -47,12 +53,12 @@ function faturamentoPorMes(atendimentos) {
 function servicosMaisProcurados(atendimentos) {
     const contagem = {};
 
-    atendimentos.forEach((atendimento) => {
+    atendimentos.filter(contaComoAtendimento).forEach((atendimento) => {
         const nome = atendimento.tipo_servico.trim();
         const chave = nome.toLowerCase();
         if (!contagem[chave]) contagem[chave] = { nome, total: 0, receita: 0 };
         contagem[chave].total++;
-        if (jaAconteceu(atendimento)) contagem[chave].receita += Number(atendimento.valor ?? 0);
+        if (foiConcluido(atendimento)) contagem[chave].receita += Number(atendimento.valor ?? 0);
     });
 
     return Object.values(contagem)
@@ -61,20 +67,17 @@ function servicosMaisProcurados(atendimentos) {
 }
 
 function proximosAtendimentos(atendimentos) {
-    const hoje = inicioDeHoje();
+    const hoje = dataISO(new Date());
 
     return atendimentos
-        .filter((atendimento) => new Date(atendimento.data_atendimento) >= hoje)
+        .filter((atendimento) => atendimento.status === 'agendado' && dataISO(atendimento.data_atendimento) >= hoje)
         .sort((a, b) => chaveDeOrdem(a).localeCompare(chaveDeOrdem(b)))
         .slice(0, 5);
 }
 
 function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes, animais, servicos, profissionais }) {
-    const hoje = new Date();
-    const atendimentosNoMes = atendimentos.filter((atendimento) => {
-        const data = new Date(atendimento.data_atendimento);
-        return data.getFullYear() === hoje.getFullYear() && data.getMonth() === hoje.getMonth();
-    }).length;
+    const atendimentosNoMes = atendimentos.filter((a) => doMesAtual(a) && contaComoAtendimento(a)).length;
+    const perdidosNoMes = atendimentos.filter((a) => doMesAtual(a) && !contaComoAtendimento(a)).length;
 
     const porMes = faturamentoPorMes(atendimentos);
     const faturamentoDoMes = porMes[porMes.length - 1].faturamento;
@@ -107,6 +110,7 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes,
                 <div className="card">
                     <h3>Atendimentos no mês</h3>
                     <p>{atendimentosNoMes}</p>
+                    <span className="card-detalhe">{perdidosNoMes} cancelados ou faltas</span>
                 </div>
                 <div className="card">
                     <h3>Faturamento do mês</h3>
@@ -127,7 +131,7 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes,
             <section className="graficos">
                 <div className="painel">
                     <h3>Faturamento por mês</h3>
-                    <p className="painel-subtitulo">Atendimentos realizados nos últimos 6 meses</p>
+                    <p className="painel-subtitulo">Atendimentos concluídos nos últimos 6 meses</p>
                     <ResponsiveContainer width="100%" height={240}>
                         <BarChart data={porMes} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <CartesianGrid vertical={false} stroke={COR_GRADE} />

@@ -51,6 +51,8 @@ CREATE TABLE atendimentos (
     valor NUMERIC(10, 2) CHECK (valor >= 0),
     data_atendimento DATE NOT NULL,
     hora_atendimento TIME,
+    status VARCHAR(20) NOT NULL DEFAULT 'agendado'
+        CHECK (status IN ('agendado', 'concluido', 'cancelado', 'faltou')),
     observacoes TEXT
 );
 

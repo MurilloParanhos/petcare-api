@@ -1,38 +1,51 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { formatarMoeda, formatarTelefone, normalizar, paginar } from '../utils';
-import { chaveDeOrdem, dataISO, faixaDeHorario, horariosLivres, profissionaisLivres } from '../agenda';
+import {
+    chaveDeOrdem, dataISO, estaAtrasado, faixaDeHorario, horariosLivres, profissionaisLivres, STATUS_DO_ATENDIMENTO
+} from '../agenda';
 import Paginacao from './Paginacao';
 import CampoData from './CampoData';
 import CampoSelecao from './CampoSelecao';
 
 const FORM_VAZIO = {
     cliente_id: '', animal_id: '', servico_id: '', valor: '',
-    data_atendimento: '', hora_atendimento: '', profissional_id: '', observacoes: ''
+    data_atendimento: '', hora_atendimento: '', profissional_id: '', status: '', observacoes: ''
 };
 
-const STATUS = [
-    { id: 'agendados', nome: 'Agendados' },
-    { id: 'realizados', nome: 'Realizados' },
-    { id: 'todos', nome: 'Todos' }
+// Filtros da lista: cada um mostra os atendimentos com esses status
+const FILTROS_DE_STATUS = [
+    { id: 'agendados', nome: 'Agendados', status: ['agendado'] },
+    { id: 'concluidos', nome: 'Concluídos', status: ['concluido'] },
+    { id: 'cancelados', nome: 'Cancelados e faltas', status: ['cancelado', 'faltou'] },
+    { id: 'todos', nome: 'Todos', status: ['agendado', 'concluido', 'cancelado', 'faltou'] }
 ];
 
-function inicioDeHoje() {
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    return hoje;
-}
-
-function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, profissionais, recarregar }) {
+function Atendimentos({
+    atendimentos, inativos, clientes, animais, servicos, profissionais, recarregar,
+    mudarStatus, preenchimento, onPreenchido
+}) {
     const [subAba, setSubAba] = useState('atendimentos');
     const [form, setForm] = useState(FORM_VAZIO);
     const [editandoId, setEditandoId] = useState(null);
     const [msg, setMsg] = useState('');
 
     const [busca, setBusca] = useState('');
-    const [status, setStatus] = useState('agendados');
+    const [filtroStatus, setFiltroStatus] = useState('agendados');
     const [servico, setServico] = useState('');
     const [pagina, setPagina] = useState(1);
+
+    // Vindo da Agenda (clique num horario livre): abre o formulario com
+    // data, hora e profissional ja escolhidos; falta so o cliente e o servico
+    useEffect(() => {
+        if (!preenchimento) return;
+        setForm({ ...FORM_VAZIO, ...preenchimento });
+        setEditandoId(null);
+        setSubAba('atendimentos');
+        setMsg('');
+        onPreenchido();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [preenchimento]);
 
     function nomeDoCliente(clienteId) {
         return clientes.find((c) => c.id === clienteId)?.nome ?? `Cliente #${clienteId}`;
@@ -68,22 +81,18 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, pro
         return doCliente.length === 1 ? doCliente[0].id : '';
     }
 
-    function jaAconteceu(atendimento) {
-        return new Date(atendimento.data_atendimento) < inicioDeHoje();
-    }
-
     // No formulario aparecem so os servicos ativos, mais o servico do
     // atendimento em edicao (caso ele tenha sido desativado depois)
     const servicosDoFormulario = servicos.filter((s) => s.ativo || s.id === Number(form.servico_id));
 
     const filtrados = atendimentos
-        .filter((a) => status === 'todos' || (status === 'realizados') === jaAconteceu(a))
+        .filter((a) => FILTROS_DE_STATUS.find((f) => f.id === filtroStatus).status.includes(a.status))
         .filter((a) => [nomeDoCliente(a.cliente_id), nomeDoAnimal(a.animal_id)].some((campo) => normalizar(campo).includes(normalizar(busca))))
         .filter((a) => !servico || a.servico_id === Number(servico))
         .sort((a, b) => {
             const diferenca = chaveDeOrdem(a).localeCompare(chaveDeOrdem(b));
-            // Agendados: o mais proximo primeiro. Realizados e todos: o mais recente primeiro
-            return status === 'agendados' ? diferenca : -diferenca;
+            // Agendados: o mais proximo primeiro (os atrasados aparecem no topo). Os outros: o mais recente primeiro
+            return filtroStatus === 'agendados' ? diferenca : -diferenca;
         });
 
     function nomeDoProfissional(profissionalId) {
@@ -207,6 +216,7 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, pro
             data_atendimento: dataISO(atendimento.data_atendimento),
             hora_atendimento: atendimento.hora_atendimento?.slice(0, 5) ?? '',
             profissional_id: atendimento.profissional_id ?? '',
+            status: atendimento.status,
             observacoes: atendimento.observacoes ?? ''
         });
         setEditandoId(atendimento.id);
@@ -232,6 +242,8 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, pro
         setMsg('');
 
         const { cliente_id, animal_id, servico_id, valor, data_atendimento, hora_atendimento, profissional_id } = form;
+        // Atendimento novo: a API define o status pela data. Na edicao, vai o escolhido no formulario
+        const status = editandoId ? form.status : undefined;
         const observacoes = form.observacoes.trim();
 
         if (!cliente_id || !servico_id || !data_atendimento) {
@@ -260,7 +272,7 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, pro
         try {
             await api(url, {
                 method,
-                body: { cliente_id, animal_id, servico_id, profissional_id, valor, data_atendimento, hora_atendimento, observacoes }
+                body: { cliente_id, animal_id, servico_id, profissional_id, valor, data_atendimento, hora_atendimento, status, observacoes }
             });
             cancelar();
             recarregar();
@@ -362,6 +374,18 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, pro
                             <label htmlFor="atendimentoObs">Observações</label>
                             <input type="text" id="atendimentoObs" name="observacoes" value={form.observacoes} onChange={alterarCampo} />
                         </div>
+                        {editandoId && (
+                            <div>
+                                <label htmlFor="atendimentoStatus">Status</label>
+                                <CampoSelecao
+                                    id="atendimentoStatus"
+                                    valor={form.status}
+                                    opcoes={Object.entries(STATUS_DO_ATENDIMENTO).map(([valor, info]) => ({ valor, rotulo: info.nome }))}
+                                    onChange={(valor) => definirCampo('status', valor)}
+                                    buscavel={false}
+                                />
+                            </div>
+                        )}
                         <button type="submit">{editandoId ? 'Salvar edição' : 'Registrar atendimento'}</button>
                         {editandoId && <button type="button" onClick={cancelar}>Cancelar</button>}
                         <p className="erro">{msg}</p>
@@ -375,13 +399,13 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, pro
                             onChange={(e) => filtrar(setBusca)(e.target.value)}
                         />
                         <div className="grupo-botoes">
-                            {STATUS.map((s) => (
+                            {FILTROS_DE_STATUS.map((f) => (
                                 <button
-                                    key={s.id}
-                                    className={status === s.id ? 'ativo' : ''}
-                                    onClick={() => filtrar(setStatus)(s.id)}
+                                    key={f.id}
+                                    className={filtroStatus === f.id ? 'ativo' : ''}
+                                    onClick={() => filtrar(setFiltroStatus)(f.id)}
                                 >
-                                    {s.nome}
+                                    {f.nome}
                                 </button>
                             ))}
                         </div>
@@ -402,24 +426,23 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, pro
                             <tr>
                                 <th>Cliente</th>
                                 <th>Pet</th>
-                                <th>Espécie</th>
                                 <th>Serviço</th>
                                 <th>Valor</th>
                                 <th>Data</th>
                                 <th>Horário</th>
+                                <th>Status</th>
                                 <th>Observações</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             {paginacao.itens.map((atendimento) => (
-                                <tr
-                                    key={atendimento.id}
-                                    className={jaAconteceu(atendimento) ? 'atendimento-realizado' : 'atendimento-agendado'}
-                                >
+                                <tr key={atendimento.id} className={`linha-${atendimento.status}`}>
                                     <td>{nomeDoCliente(atendimento.cliente_id)}</td>
-                                    <td>{nomeDoAnimal(atendimento.animal_id)}</td>
-                                    <td>{especieDoAnimal(atendimento.animal_id)}</td>
+                                    <td>
+                                        {nomeDoAnimal(atendimento.animal_id)}
+                                        <span className="detalhe-celula">{especieDoAnimal(atendimento.animal_id)}</span>
+                                    </td>
                                     <td>{atendimento.tipo_servico}</td>
                                     <td>{formatarMoeda(atendimento.valor)}</td>
                                     <td>{new Date(atendimento.data_atendimento).toLocaleDateString('pt-BR')}</td>
@@ -427,9 +450,24 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, pro
                                         {faixaDeHorario(atendimento, servicos)}
                                         <span className="detalhe-celula">{nomeDoProfissional(atendimento.profissional_id)}</span>
                                     </td>
-                                    <td>{atendimento.observacoes ?? '-'}</td>
                                     <td>
+                                        <span className={`selo ${STATUS_DO_ATENDIMENTO[atendimento.status].classe}`}>
+                                            {STATUS_DO_ATENDIMENTO[atendimento.status].nome}
+                                        </span>
+                                        {estaAtrasado(atendimento) && <span className="detalhe-celula alerta">Sem baixa</span>}
+                                    </td>
+                                    <td>{atendimento.observacoes ?? '-'}</td>
+                                    <td className="acoes">
                                         <button className="btn-editar" onClick={() => editar(atendimento)}>Editar</button>
+                                        {atendimento.status === 'agendado' ? (
+                                            <>
+                                                <button className="btn-concluir" onClick={() => mudarStatus(atendimento, 'concluido')}>Concluir</button>
+                                                <button className="btn-secundario" onClick={() => mudarStatus(atendimento, 'faltou')}>Faltou</button>
+                                                <button className="btn-excluir" onClick={() => mudarStatus(atendimento, 'cancelado')}>Cancelar</button>
+                                            </>
+                                        ) : (
+                                            <button className="btn-secundario" onClick={() => mudarStatus(atendimento, 'agendado')}>Reabrir</button>
+                                        )}
                                     </td>
                                 </tr>
                             ))}

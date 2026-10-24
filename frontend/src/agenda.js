@@ -9,6 +9,19 @@ export const INTERVALO = 30;
 
 export const NOMES_DAS_FUNCOES = { tosador: 'Banho e tosa', veterinario: 'Veterinária' };
 
+// Nome e classe CSS (cor) de cada status do atendimento
+export const STATUS_DO_ATENDIMENTO = {
+    agendado: { nome: 'Agendado', classe: 'status-agendado' },
+    concluido: { nome: 'Concluído', classe: 'status-concluido' },
+    cancelado: { nome: 'Cancelado', classe: 'status-cancelado' },
+    faltou: { nome: 'Faltou', classe: 'status-faltou' }
+};
+
+// Agendado com data que ja passou: ficou sem baixa (nao foi concluido nem cancelado)
+export function estaAtrasado(atendimento) {
+    return atendimento.status === 'agendado' && dataISO(atendimento.data_atendimento) < dataISO(new Date());
+}
+
 // "09:30" ou "09:30:00" (formato do PostgreSQL) -> 570
 export function emMinutos(hora) {
     const [h, m] = hora.split(':').map(Number);
@@ -35,10 +48,12 @@ function duracaoDoServico(servicos, servicoId) {
 }
 
 // Intervalos ja ocupados na agenda de um profissional nesse dia
+// (atendimento cancelado libera o horario)
 function ocupadosDoProfissional({ data, profissionalId, atendimentos, servicos, ignorarId }) {
     return atendimentos
         .filter((a) =>
             a.id !== ignorarId &&
+            a.status !== 'cancelado' &&
             a.profissional_id === profissionalId &&
             a.hora_atendimento &&
             dataISO(a.data_atendimento) === data

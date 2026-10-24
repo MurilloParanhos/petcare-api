@@ -2,6 +2,7 @@ import { usuarioLogado } from '../api';
 
 const ABAS = [
     { id: 'resumo', nome: 'Dashboard', icone: 'fa-chart-pie' },
+    { id: 'agenda', nome: 'Agenda', icone: 'fa-calendar-days' },
     { id: 'clientes', nome: 'Clientes', icone: 'fa-users' },
     { id: 'animais', nome: 'Animais', icone: 'fa-paw' },
     { id: 'atendimentos', nome: 'Atendimentos', icone: 'fa-calendar-check' },

@@ -417,14 +417,78 @@ th {
     pointer-events: auto;
 }
 
-.atendimento-realizado {
-    background-color: #e6f4ea;
-    border-left: 4px solid #2e5940;
+/* Cor da linha conforme o status do atendimento */
+.linha-agendado {
+    background-color: #fff8e1;
 }
 
-.atendimento-agendado {
-    background-color: #fff8e1;
-    border-left: 4px solid #d4a017;
+.linha-concluido {
+    background-color: #e6f4ea;
+}
+
+.linha-cancelado td,
+.linha-faltou td {
+    color: #888;
+}
+
+/* Selo do status (tabela e agenda); a cor vem com o texto, nunca so a cor */
+.selo {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.status-agendado {
+    background-color: #fdecb3;
+    color: #7a5b00;
+}
+
+.status-concluido {
+    background-color: #cfe9d8;
+    color: #1f5a37;
+}
+
+.status-cancelado {
+    background-color: #e4e4e4;
+    color: #555;
+}
+
+.status-faltou {
+    background-color: #f6d5d5;
+    color: #8a2424;
+}
+
+.detalhe-celula.alerta {
+    color: #a83232;
+    font-weight: bold;
+}
+
+.acoes {
+    white-space: nowrap;
+}
+
+.btn-concluir,
+.btn-secundario {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 4px;
+}
+
+.btn-concluir {
+    background-color: #3a8a5c;
+    color: white;
+    border: none;
+}
+
+.btn-secundario {
+    background-color: white;
+    color: #444;
+    border: 1px solid #ccc;
 }
 
 .subtitulo-inativos {
@@ -670,4 +734,169 @@ th {
     padding: 0;
     border: none;
     min-width: 0;
+}
+
+/* ===== AGENDA DO DIA ===== */
+
+.agenda-navegacao {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 15px 0 8px;
+}
+
+.agenda-navegacao .btn-secundario {
+    padding: 8px 12px;
+    font-size: 13px;
+    margin: 0;
+}
+
+.agenda-navegacao .btn-secundario:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.agenda-data input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 120px;
+}
+
+.agenda-extenso {
+    color: #1f3d2c;
+    font-weight: bold;
+    text-transform: capitalize;
+    margin-left: 6px;
+}
+
+/* Em tela pequena a grade rola para o lado em vez de espremer as colunas */
+.agenda-rolagem {
+    overflow-x: auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.agenda {
+    display: grid;
+    min-width: 760px;
+}
+
+.agenda-canto,
+.agenda-cabecalho {
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0;
+    background-color: #f7f9f8;
+}
+
+.agenda-cabecalho {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #eee;
+}
+
+.agenda-cabecalho strong {
+    color: #1f3d2c;
+    font-size: 14px;
+}
+
+.agenda-cabecalho span {
+    color: #888;
+    font-size: 12px;
+}
+
+.agenda-horas {
+    position: relative;
+}
+
+.agenda-horas span {
+    position: absolute;
+    right: 8px;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: #888;
+}
+
+.agenda-horas span:first-child {
+    transform: none;
+}
+
+/* Linhas finas a cada 30 minutos */
+.agenda-coluna {
+    position: relative;
+    border-left: 1px solid #eee;
+    background-image: linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
+    background-size: 100% 48px;
+}
+
+.agenda-livre {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border: none;
+    background: none;
+    color: transparent;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.agenda-livre:hover {
+    background-color: #e6f4ea;
+    color: #2e5940;
+}
+
+.agenda-bloco {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    margin-top: 2px;
+    padding: 4px 8px;
+    border: none;
+    border-left: 4px solid currentColor;
+    border-radius: 4px;
+    text-align: left;
+    font-size: 12px;
+    line-height: 1.35;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.agenda-bloco span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.agenda-bloco.selecionado {
+    outline: 2px solid #1f3d2c;
+    outline-offset: 1px;
+}
+
+.agenda-agora {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 2px solid #a83232;
+    pointer-events: none;
+}
+
+.agenda-detalhe p {
+    margin-top: 6px;
+    color: #444;
+}
+
+.agenda-detalhe-topo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.agenda-detalhe-acoes {
+    margin-top: 12px;
 }

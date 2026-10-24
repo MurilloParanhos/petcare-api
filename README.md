@@ -32,7 +32,8 @@ O projeto começou com o front-end em HTML, CSS e JavaScript puro e foi migrado 
 - CRUD de clientes e de animais
 - Cadastro, edição e agendamento de atendimentos, vinculados ao cliente e ao pet atendido
 - Agenda das 09:00 às 17:00 por profissional (2 tosadores e 2 veterinários): cada serviço tem uma duração e é feito por uma função; o sistema sugere o primeiro horário livre e o profissional menos ocupado, e a API recusa horários que se sobrepõem na agenda do mesmo profissional
-- Destaque visual de atendimentos realizados e agendados
+- Status do atendimento (agendado, concluído, cancelado, faltou) com botões rápidos; cancelar libera o horário e o faturamento conta só os concluídos
+- Agenda do dia em grade, com uma coluna por profissional: blocos do tamanho da duração de cada serviço, linha da hora atual e clique num horário livre para agendar
 - Lista de clientes inativos (sem atendimento há mais de 60 dias), com atalho para agendar
 - Dashboard com:
   - indicadores de clientes, animais, atendimentos no mês, faturamento do mês e clientes inativos
@@ -141,6 +142,7 @@ Todas as rotas, exceto cadastro de usuário e login, exigem o cabeçalho `Author
 | GET | `/api/atendimentos` | Sim | Lista os atendimentos |
 | POST | `/api/atendimentos` | Sim | Registra um atendimento (o `animal_id` precisa ser do cliente; sem `valor`, usa o preço do serviço) |
 | PUT | `/api/atendimentos/:id` | Sim | Atualiza um atendimento |
+| PATCH | `/api/atendimentos/:id/status` | Sim | Muda só o status (agendado, concluido, cancelado, faltou) |
 | GET | `/api/atendimentos/inativos` | Sim | Lista clientes sem atendimento há mais de 60 dias |
 | GET | `/api/servicos` | Sim | Lista o catálogo de serviços |
 | GET | `/api/profissionais` | Sim | Lista a equipe (tosadores e veterinários) |
