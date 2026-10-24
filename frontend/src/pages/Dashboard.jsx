@@ -84,6 +84,12 @@ function Dashboard({ onSair }) {
         setAba('atendimentos');
     }
 
+    // Botao Editar no detalhe da Agenda: abre o atendimento no formulario
+    function editarPelaAgenda(atendimento) {
+        setPreenchimento({ editarId: atendimento.id });
+        setAba('atendimentos');
+    }
+
     // Roda uma vez quando o dashboard aparece na tela
     useEffect(() => {
         carregarClientes();
@@ -119,6 +125,7 @@ function Dashboard({ onSair }) {
                         profissionais={profissionais}
                         mudarStatus={mudarStatus}
                         onAgendar={agendarPelaAgenda}
+                        onEditar={editarPelaAgenda}
                     />
                 )}
                 {aba === 'clientes' && (

@@ -1,11 +1,27 @@
-// Regras da agenda: funcionamento das 09:00 as 17:00, horarios de 30 em 30 min.
+// Regras da agenda: funcionamento das 09:00 as 17:00, horarios de 30 em 30 min,
+// pausa para almoco das 12:00 as 13:00 e fechado aos domingos.
 // Cada profissional tem a sua agenda: dois atendimentos no mesmo horario
 // sao possiveis se forem com profissionais diferentes.
 // Os horarios sao trabalhados em minutos desde a meia-noite (09:00 = 540).
+// A API confere as mesmas regras em src/controllers/atendimentoController.js.
 
 export const ABERTURA = 9 * 60;
 export const FECHAMENTO = 17 * 60;
 export const INTERVALO = 30;
+export const ALMOCO_INICIO = 12 * 60;
+export const ALMOCO_FIM = 13 * 60;
+// Dias da semana sem atendimento (0 = domingo, como no getDay() do JavaScript)
+export const DIAS_FECHADOS = [0];
+
+// "2026-11-01" e domingo? -> true
+export function diaFechado(data) {
+    return DIAS_FECHADOS.includes(new Date(`${data}T00:00:00`).getDay());
+}
+
+// O atendimento [inicio, fim) pega algum pedaco do almoco?
+export function pegaOAlmoco(inicio, fim) {
+    return inicio < ALMOCO_FIM && ALMOCO_INICIO < fim;
+}
 
 export const NOMES_DAS_FUNCOES = { tosador: 'Banho e tosa', veterinario: 'Veterinária' };
 
@@ -79,8 +95,11 @@ export function profissionaisLivres({ data, hora, duracao, profissionais, atendi
 // Horarios em que pelo menos um dos profissionais esta livre durante todo o servico.
 // ignorarId: o atendimento que esta sendo editado.
 export function horariosLivres({ data, duracao, profissionais, atendimentos, servicos, ignorarId }) {
+    if (diaFechado(data)) return [];
+
     const livres = [];
     for (let inicio = ABERTURA; inicio + duracao <= FECHAMENTO; inicio += INTERVALO) {
+        if (pegaOAlmoco(inicio, inicio + duracao)) continue;
         const hora = horaTexto(inicio);
         if (profissionaisLivres({ data, hora, duracao, profissionais, atendimentos, servicos, ignorarId }).length > 0) {
             livres.push(hora);

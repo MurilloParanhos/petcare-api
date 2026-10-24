@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { formatarMoeda, formatarTelefone, normalizar, paginar } from '../utils';
 import {
-    chaveDeOrdem, dataISO, estaAtrasado, faixaDeHorario, horariosLivres, profissionaisLivres, STATUS_DO_ATENDIMENTO
+    chaveDeOrdem, dataISO, diaFechado, estaAtrasado, faixaDeHorario, horariosLivres, profissionaisLivres, STATUS_DO_ATENDIMENTO
 } from '../agenda';
 import Paginacao from './Paginacao';
 import CampoData from './CampoData';
@@ -35,16 +35,25 @@ function Atendimentos({
     const [servico, setServico] = useState('');
     const [pagina, setPagina] = useState(1);
 
-    // Vindo da Agenda (clique num horario livre): abre o formulario com
-    // data, hora e profissional ja escolhidos; falta so o cliente e o servico
+    // Vindo da Agenda:
+    // - clique num horario livre: abre o formulario com data, hora e
+    //   profissional ja escolhidos (falta so o cliente e o servico);
+    // - botao Editar no detalhe: abre o atendimento para edicao.
     useEffect(() => {
         if (!preenchimento) return;
-        setForm({ ...FORM_VAZIO, ...preenchimento });
-        setEditandoId(null);
+        const { editarId, ...dados } = preenchimento;
+        const paraEditar = editarId && atendimentos.find((a) => a.id === editarId);
+
         setSubAba('atendimentos');
         setMsg('');
+        if (paraEditar) {
+            editar(paraEditar);
+        } else {
+            setForm({ ...FORM_VAZIO, ...dados });
+            setEditandoId(null);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
         onPreenchido();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [preenchimento]);
 
     function nomeDoCliente(clienteId) {
@@ -344,7 +353,7 @@ function Atendimentos({
                         </div>
                         <div>
                             <label htmlFor="atendimentoData">Data</label>
-                            <CampoData id="atendimentoData" valor={form.data_atendimento} onChange={escolherData} />
+                            <CampoData id="atendimentoData" valor={form.data_atendimento} onChange={escolherData} bloquearFechados />
                         </div>
                         <div>
                             <label htmlFor="atendimentoHora">Horário</label>
@@ -355,7 +364,9 @@ function Atendimentos({
                                 onChange={escolherHora}
                                 desabilitado={horariosDoFormulario.length === 0}
                                 buscavel={false}
-                                placeholder={!form.data_atendimento || !form.servico_id ? 'Escolha serviço e data' : 'Dia lotado'}
+                                placeholder={!form.data_atendimento || !form.servico_id
+                                    ? 'Escolha serviço e data'
+                                    : diaFechado(form.data_atendimento) ? 'Fechado aos domingos' : 'Dia lotado'}
                             />
                         </div>
                         <div>

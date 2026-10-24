@@ -199,6 +199,8 @@ async function criar() {
         // Comeca depois dos atendimentos que ja existem, para nao encavalar.
         const ABERTURA = 9 * 60;
         const FECHAMENTO = 17 * 60;
+        const ALMOCO_INICIO = 12 * 60;
+        const ALMOCO_FIM = 13 * 60;
         const proximoLivre = {};
         const ocupados = await conexao.query(
             `SELECT to_char(a.data_atendimento, 'YYYY-MM-DD') AS dia, a.profissional_id,
@@ -218,9 +220,14 @@ async function criar() {
         // Entre os profissionais da funcao, escolhe quem fica livre mais cedo no dia;
         // no empate, quem atendeu menos ate agora (para dividir o trabalho)
         const atendidosPor = {};
-        function melhorProfissional(funcao, dia) {
+        // Se o servico pegaria o almoco, comeca as 13:00
+        function inicioForaDoAlmoco(inicio, duracao) {
+            return inicio < ALMOCO_FIM && ALMOCO_INICIO < inicio + duracao ? ALMOCO_FIM : inicio;
+        }
+
+        function melhorProfissional(funcao, dia, duracao) {
             return profissionaisPorFuncao[funcao]
-                .map((id) => ({ id, inicio: proximoLivre[`${dia}|${id}`] ?? ABERTURA }))
+                .map((id) => ({ id, inicio: inicioForaDoAlmoco(proximoLivre[`${dia}|${id}`] ?? ABERTURA, duracao) }))
                 .sort((a, b) => a.inicio - b.inicio || (atendidosPor[a.id] ?? 0) - (atendidosPor[b.id] ?? 0))[0];
         }
 
@@ -246,12 +253,13 @@ async function criar() {
                 }
             }
 
+            // Domingo fechado: passa para segunda. Dia lotado: passa para o dia seguinte
             let dia = formatarData(data);
-            let escolhido = melhorProfissional(servico.funcao, dia);
-            while (escolhido.inicio + servico.duracao_minutos > FECHAMENTO) {
+            let escolhido = melhorProfissional(servico.funcao, dia, servico.duracao_minutos);
+            while (data.getDay() === 0 || escolhido.inicio + servico.duracao_minutos > FECHAMENTO) {
                 data.setDate(data.getDate() + 1);
                 dia = formatarData(data);
-                escolhido = melhorProfissional(servico.funcao, dia);
+                escolhido = melhorProfissional(servico.funcao, dia, servico.duracao_minutos);
             }
             proximoLivre[`${dia}|${escolhido.id}`] = escolhido.inicio + servico.duracao_minutos;
             atendidosPor[escolhido.id] = (atendidosPor[escolhido.id] ?? 0) + 1;

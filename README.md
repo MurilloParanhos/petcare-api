@@ -33,7 +33,8 @@ O projeto começou com o front-end em HTML, CSS e JavaScript puro e foi migrado 
 - Cadastro, edição e agendamento de atendimentos, vinculados ao cliente e ao pet atendido
 - Agenda das 09:00 às 17:00 por profissional (2 tosadores e 2 veterinários): cada serviço tem uma duração e é feito por uma função; o sistema sugere o primeiro horário livre e o profissional menos ocupado, e a API recusa horários que se sobrepõem na agenda do mesmo profissional
 - Status do atendimento (agendado, concluído, cancelado, faltou) com botões rápidos; cancelar libera o horário e o faturamento conta só os concluídos
-- Agenda do dia em grade, com uma coluna por profissional: blocos do tamanho da duração de cada serviço, linha da hora atual e clique num horário livre para agendar
+- Agenda do dia em grade, com uma coluna por profissional: blocos do tamanho da duração de cada serviço, faixa da semana com a quantidade de atendimentos por dia, legenda de cores, linha da hora atual e clique num horário livre para agendar
+- Pausa para almoço (12:00 às 13:00) e fechado aos domingos, validados no formulário e na API
 - Lista de clientes inativos (sem atendimento há mais de 60 dias), com atalho para agendar
 - Dashboard com:
   - indicadores de clientes, animais, atendimentos no mês, faturamento do mês e clientes inativos

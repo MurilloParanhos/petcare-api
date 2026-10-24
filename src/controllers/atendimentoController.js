@@ -1,8 +1,13 @@
 const pool = require('../config/db');
 
-// Horario de funcionamento, em minutos desde a meia-noite (09:00 e 17:00)
+// Horario de funcionamento, em minutos desde a meia-noite (09:00 e 17:00),
+// pausa para almoco e dias fechados. O front usa as mesmas regras em
+// frontend/src/agenda.js.
 const ABERTURA = 9 * 60;
 const FECHAMENTO = 17 * 60;
+const ALMOCO_INICIO = 12 * 60;
+const ALMOCO_FIM = 13 * 60;
+const DIAS_FECHADOS = [0]; // 0 = domingo
 
 const STATUS = ['agendado', 'concluido', 'cancelado', 'faltou'];
 
@@ -11,12 +16,26 @@ function emMinutos(hora) {
     return h * 60 + m;
 }
 
-// Data de hoje no fuso do servidor, no formato do banco ("2026-11-02")
+// Data (Date) no fuso do servidor, no formato do banco ("2026-11-02")
+function dataISO(data) {
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const dia = String(data.getDate()).padStart(2, '0');
+    return `${data.getFullYear()}-${mes}-${dia}`;
+}
+
 function hojeISO() {
-    const hoje = new Date();
-    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-    const dia = String(hoje.getDate()).padStart(2, '0');
-    return `${hoje.getFullYear()}-${mes}-${dia}`;
+    return dataISO(new Date());
+}
+
+// Confere almoco e dia fechado. Devolve a mensagem de erro ou null.
+function foraDoFuncionamento(data, inicio, duracao) {
+    if (DIAS_FECHADOS.includes(new Date(`${data}T00:00:00`).getDay())) {
+        return 'O pet shop não abre aos domingos. Escolha outra data.';
+    }
+    if (inicio < ALMOCO_FIM && ALMOCO_INICIO < inicio + duracao) {
+        return 'Esse horário pega o almoço (12:00 às 13:00). Escolha outro horário.';
+    }
+    return null;
 }
 
 // Procura outro atendimento na agenda do profissional que se sobreponha a
@@ -111,6 +130,23 @@ async function prepararAtendimento(corpo, { novo, id = 0 }) {
     const inicio = emMinutos(hora_atendimento);
     if (inicio < ABERTURA || inicio + servico.duracao_minutos > FECHAMENTO) {
         return { erro: `Esse serviço dura ${servico.duracao_minutos} min e precisa caber entre 09:00 e 17:00.` };
+    }
+
+    // Almoco e domingo valem para atendimentos novos e para remarcacoes.
+    // Um atendimento antigo que ja estava nesse horario pode ser editado
+    // (trocar observacao, valor...) sem precisar mudar de horario.
+    let mudouHorario = novo;
+    if (!novo) {
+        const atual = (await pool.query('SELECT data_atendimento, hora_atendimento FROM atendimentos WHERE id = $1', [id])).rows[0];
+        mudouHorario = !atual
+            || dataISO(atual.data_atendimento) !== String(data_atendimento).slice(0, 10)
+            || String(atual.hora_atendimento).slice(0, 5) !== hora_atendimento.slice(0, 5);
+    }
+    if (mudouHorario) {
+        const erroFuncionamento = foraDoFuncionamento(String(data_atendimento).slice(0, 10), inicio, servico.duracao_minutos);
+        if (erroFuncionamento) {
+            return { erro: erroFuncionamento };
+        }
     }
 
     // Um atendimento cancelado nao ocupa a agenda, entao nao precisa conferir conflito
