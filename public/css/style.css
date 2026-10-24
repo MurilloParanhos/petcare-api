@@ -625,3 +625,7 @@ th {
     font-size: 13px;
     margin: 4px 0 15px;
 }
+
+.sem-quebra {
+    white-space: nowrap;
+}

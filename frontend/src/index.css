@@ -4,3 +4,61 @@
     width: 100%;
     display: flex;
 }
+
+/* ===== CALENDARIO (react-datepicker) ===== */
+
+.react-datepicker {
+    font-family: Arial, sans-serif;
+    font-size: 15px;
+    border-color: #d6e4da;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.react-datepicker__header {
+    background-color: #1f3d2c;
+    border-bottom: none;
+    padding-top: 12px;
+}
+
+/* Nome do mes maior e com a primeira letra maiuscula ("Novembro 2026") */
+.react-datepicker__current-month {
+    color: white;
+    font-size: 18px;
+    text-transform: capitalize;
+    margin-bottom: 8px;
+}
+
+.react-datepicker__day-name {
+    color: #d6e4da;
+    font-size: 13px;
+    text-transform: capitalize;
+}
+
+.react-datepicker__day-name,
+.react-datepicker__day {
+    width: 2.3rem;
+    line-height: 2.3rem;
+}
+
+.react-datepicker__navigation-icon::before {
+    border-color: white;
+}
+
+.react-datepicker__day:hover {
+    background-color: #e6f4ea;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+    background-color: #2e5940;
+    color: white;
+}
+
+.react-datepicker__day--today {
+    font-weight: bold;
+    color: #2e5940;
+}
+
+.react-datepicker__day--selected.react-datepicker__day--today {
+    color: white;
+}

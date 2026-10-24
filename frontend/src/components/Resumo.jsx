@@ -1,5 +1,6 @@
 import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { formatarMoeda } from '../utils';
+import { chaveDeOrdem, faixaDeHorario } from '../agenda';
 
 // Verde das barras: da mesma familia da marca, mas vivo o bastante para ler como dado
 const COR_BARRA = '#3a8a5c';
@@ -64,11 +65,11 @@ function proximosAtendimentos(atendimentos) {
 
     return atendimentos
         .filter((atendimento) => new Date(atendimento.data_atendimento) >= hoje)
-        .sort((a, b) => new Date(a.data_atendimento) - new Date(b.data_atendimento))
+        .sort((a, b) => chaveDeOrdem(a).localeCompare(chaveDeOrdem(b)))
         .slice(0, 5);
 }
 
-function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes, animais }) {
+function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes, animais, servicos }) {
     const hoje = new Date();
     const atendimentosNoMes = atendimentos.filter((atendimento) => {
         const data = new Date(atendimento.data_atendimento);
@@ -78,7 +79,7 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes,
     const porMes = faturamentoPorMes(atendimentos);
     const faturamentoDoMes = porMes[porMes.length - 1].faturamento;
     const faturamentoMesPassado = porMes[porMes.length - 2].faturamento;
-    const servicos = servicosMaisProcurados(atendimentos);
+    const maisProcurados = servicosMaisProcurados(atendimentos);
     const proximos = proximosAtendimentos(atendimentos);
 
     function nomeDoCliente(clienteId) {
@@ -150,11 +151,11 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes,
                 <div className="painel">
                     <h3>Serviços mais procurados</h3>
                     <p className="painel-subtitulo">Top 5, todos os atendimentos</p>
-                    {servicos.length === 0 ? (
+                    {maisProcurados.length === 0 ? (
                         <p className="painel-vazio">Nenhum atendimento registrado ainda.</p>
                     ) : (
                         <ResponsiveContainer width="100%" height={240}>
-                            <BarChart data={servicos} layout="vertical" margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                            <BarChart data={maisProcurados} layout="vertical" margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                 <XAxis type="number" hide allowDecimals={false} />
                                 <YAxis type="category" dataKey="nome" width={120} tickLine={false} axisLine={false} tick={{ fill: COR_TEXTO, fontSize: 12 }} />
                                 <Tooltip
@@ -180,6 +181,7 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes,
                         <thead>
                             <tr>
                                 <th>Data</th>
+                                <th>Horário</th>
                                 <th>Cliente</th>
                                 <th>Pet</th>
                                 <th>Serviço</th>
@@ -189,6 +191,7 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes,
                             {proximos.map((atendimento) => (
                                 <tr key={atendimento.id}>
                                     <td>{new Date(atendimento.data_atendimento).toLocaleDateString('pt-BR')}</td>
+                                    <td className="sem-quebra">{faixaDeHorario(atendimento, servicos)}</td>
                                     <td>{nomeDoCliente(atendimento.cliente_id)}</td>
                                     <td>{nomeDoAnimal(atendimento.animal_id)}</td>
                                     <td>{atendimento.tipo_servico}</td>

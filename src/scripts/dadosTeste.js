@@ -189,16 +189,43 @@ async function criar() {
         hoje.setHours(0, 0, 0, 0);
         let totalAtendimentos = 0;
 
-        // Cada atendimento vai para um dos animais do cliente, com uma
-        // observacao combinando com o servico (ou com o agendamento)
+        // Proximo horario livre de cada dia, em minutos. Comeca depois dos
+        // atendimentos que ja existem no banco, para nao encavalar com eles.
+        const ABERTURA = 9 * 60;
+        const FECHAMENTO = 17 * 60;
+        const proximoLivre = {};
+        const ocupados = await conexao.query(
+            `SELECT to_char(a.data_atendimento, 'YYYY-MM-DD') AS dia,
+                    MAX(EXTRACT(EPOCH FROM a.hora_atendimento) / 60 + s.duracao_minutos) AS fim
+             FROM atendimentos a JOIN servicos s ON s.id = a.servico_id
+             WHERE a.hora_atendimento IS NOT NULL
+             GROUP BY 1`
+        );
+        ocupados.rows.forEach((linha) => { proximoLivre[linha.dia] = Number(linha.fim); });
+
+        function horaTexto(minutos) {
+            return `${String(Math.floor(minutos / 60)).padStart(2, '0')}:${String(minutos % 60).padStart(2, '0')}`;
+        }
+
+        // Cada atendimento vai para um dos animais do cliente, no proximo
+        // horario livre do dia (se o dia lotou, passa para o dia seguinte),
+        // com uma observacao combinando com o servico (ou com o agendamento)
         async function inserirAtendimento(clienteId, data, agendado = false) {
             const servico = catalogo[sortearServico()];
             const observacao = agendado ? sortear(OBSERVACOES_AGENDADO) : sortear(OBSERVACOES[servico.nome]);
 
+            let dia = formatarData(data);
+            while ((proximoLivre[dia] ?? ABERTURA) + servico.duracao_minutos > FECHAMENTO) {
+                data.setDate(data.getDate() + 1);
+                dia = formatarData(data);
+            }
+            const inicio = proximoLivre[dia] ?? ABERTURA;
+            proximoLivre[dia] = inicio + servico.duracao_minutos;
+
             await conexao.query(
-                `INSERT INTO atendimentos (cliente_id, animal_id, servico_id, tipo_servico, valor, data_atendimento, observacoes)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-                [clienteId, sortear(animaisPorCliente[clienteId]), servico.id, servico.nome, servico.preco, formatarData(data), observacao]
+                `INSERT INTO atendimentos (cliente_id, animal_id, servico_id, tipo_servico, valor, data_atendimento, hora_atendimento, observacoes)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                [clienteId, sortear(animaisPorCliente[clienteId]), servico.id, servico.nome, servico.preco, dia, horaTexto(inicio), observacao]
             );
             totalAtendimentos++;
         }

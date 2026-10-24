@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import { api } from '../api';
 import { formatarMoeda, formatarTelefone, normalizar, paginar } from '../utils';
+import { chaveDeOrdem, dataISO, faixaDeHorario, horariosLivres } from '../agenda';
 import Paginacao from './Paginacao';
+import CampoData from './CampoData';
 
-const FORM_VAZIO = { cliente_id: '', animal_id: '', servico_id: '', valor: '', data_atendimento: '', observacoes: '' };
+const FORM_VAZIO = {
+    cliente_id: '', animal_id: '', servico_id: '', valor: '',
+    data_atendimento: '', hora_atendimento: '', observacoes: ''
+};
 
 const STATUS = [
     { id: 'agendados', nome: 'Agendados' },
@@ -75,10 +80,36 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, rec
         .filter((a) => [nomeDoCliente(a.cliente_id), nomeDoAnimal(a.animal_id)].some((campo) => normalizar(campo).includes(normalizar(busca))))
         .filter((a) => !servico || a.servico_id === Number(servico))
         .sort((a, b) => {
-            const diferenca = new Date(a.data_atendimento) - new Date(b.data_atendimento);
+            const diferenca = chaveDeOrdem(a).localeCompare(chaveDeOrdem(b));
             // Agendados: o mais proximo primeiro. Realizados e todos: o mais recente primeiro
             return status === 'agendados' ? diferenca : -diferenca;
         });
+
+    // Horarios livres para o dia e o servico escolhidos no formulario
+    function livresPara(dadosDoForm, idIgnorado = editandoId) {
+        if (!dadosDoForm.data_atendimento || !dadosDoForm.servico_id) return [];
+        const duracao = servicos.find((s) => s.id === Number(dadosDoForm.servico_id))?.duracao_minutos ?? 60;
+        return horariosLivres({
+            data: dadosDoForm.data_atendimento,
+            duracao,
+            atendimentos,
+            servicos,
+            ignorarId: idIgnorado
+        });
+    }
+
+    // Mantem o horario escolhido se ele ainda estiver livre; se nao, sugere o primeiro livre
+    function comHorarioSugerido(dadosDoForm, idIgnorado = editandoId) {
+        const livres = livresPara(dadosDoForm, idIgnorado);
+        const hora = livres.includes(dadosDoForm.hora_atendimento) ? dadosDoForm.hora_atendimento : (livres[0] ?? '');
+        return { ...dadosDoForm, hora_atendimento: hora };
+    }
+
+    const horariosDoFormulario = livresPara(form);
+    // Ao editar, o horario atual aparece mesmo se nao estiver na grade de 30 em 30 min
+    if (form.hora_atendimento && !horariosDoFormulario.includes(form.hora_atendimento)) {
+        horariosDoFormulario.unshift(form.hora_atendimento);
+    }
 
     const paginacao = paginar(filtrados, pagina);
 
@@ -104,7 +135,12 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, rec
     function escolherServico(evento) {
         const servicoId = evento.target.value;
         const preco = servicos.find((s) => s.id === Number(servicoId))?.preco ?? '';
-        setForm({ ...form, servico_id: servicoId, valor: preco });
+        setForm(comHorarioSugerido({ ...form, servico_id: servicoId, valor: preco }));
+    }
+
+    // Escolher a data ja sugere o primeiro horario livre do dia
+    function escolherData(data) {
+        setForm(comHorarioSugerido({ ...form, data_atendimento: data }));
     }
 
     function editar(atendimento) {
@@ -113,7 +149,8 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, rec
             animal_id: atendimento.animal_id ?? animalPadrao(atendimento.cliente_id),
             servico_id: atendimento.servico_id ?? '',
             valor: atendimento.valor ?? '',
-            data_atendimento: new Date(atendimento.data_atendimento).toISOString().split('T')[0],
+            data_atendimento: dataISO(atendimento.data_atendimento),
+            hora_atendimento: atendimento.hora_atendimento?.slice(0, 5) ?? '',
             observacoes: atendimento.observacoes ?? ''
         });
         setEditandoId(atendimento.id);
@@ -138,11 +175,16 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, rec
         evento.preventDefault();
         setMsg('');
 
-        const { cliente_id, animal_id, servico_id, valor, data_atendimento } = form;
+        const { cliente_id, animal_id, servico_id, valor, data_atendimento, hora_atendimento } = form;
         const observacoes = form.observacoes.trim();
 
         if (!cliente_id || !servico_id || !data_atendimento) {
             setMsg('Preencha cliente, serviço e data.');
+            return;
+        }
+
+        if (!hora_atendimento) {
+            setMsg('Não há horário livre para esse serviço nesse dia. Escolha outra data.');
             return;
         }
 
@@ -160,7 +202,7 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, rec
         const method = editandoId ? 'PUT' : 'POST';
 
         try {
-            await api(url, { method, body: { cliente_id, animal_id, servico_id, valor, data_atendimento, observacoes } });
+            await api(url, { method, body: { cliente_id, animal_id, servico_id, valor, data_atendimento, hora_atendimento, observacoes } });
             cancelar();
             recarregar();
         } catch (erro) {
@@ -236,7 +278,26 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, rec
                         </div>
                         <div>
                             <label htmlFor="atendimentoData">Data</label>
-                            <input type="date" id="atendimentoData" name="data_atendimento" value={form.data_atendimento} onChange={alterarCampo} />
+                            <CampoData id="atendimentoData" valor={form.data_atendimento} onChange={escolherData} />
+                        </div>
+                        <div>
+                            <label htmlFor="atendimentoHora">Horário</label>
+                            <select
+                                id="atendimentoHora"
+                                name="hora_atendimento"
+                                value={form.hora_atendimento}
+                                onChange={alterarCampo}
+                                disabled={horariosDoFormulario.length === 0}
+                            >
+                                {horariosDoFormulario.length === 0 && (
+                                    <option value="">
+                                        {!form.data_atendimento || !form.servico_id ? 'Escolha serviço e data' : 'Dia lotado'}
+                                    </option>
+                                )}
+                                {horariosDoFormulario.map((hora) => (
+                                    <option key={hora} value={hora}>{hora}</option>
+                                ))}
+                            </select>
                         </div>
                         <div>
                             <label htmlFor="atendimentoObs">Observações</label>
@@ -282,6 +343,7 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, rec
                                 <th>Serviço</th>
                                 <th>Valor</th>
                                 <th>Data</th>
+                                <th>Horário</th>
                                 <th>Observações</th>
                                 <th>Ações</th>
                             </tr>
@@ -298,6 +360,7 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, rec
                                     <td>{atendimento.tipo_servico}</td>
                                     <td>{formatarMoeda(atendimento.valor)}</td>
                                     <td>{new Date(atendimento.data_atendimento).toLocaleDateString('pt-BR')}</td>
+                                    <td className="sem-quebra">{faixaDeHorario(atendimento, servicos)}</td>
                                     <td>{atendimento.observacoes ?? '-'}</td>
                                     <td>
                                         <button className="btn-editar" onClick={() => editar(atendimento)}>Editar</button>
@@ -306,7 +369,7 @@ function Atendimentos({ atendimentos, inativos, clientes, animais, servicos, rec
                             ))}
                             {filtrados.length === 0 && (
                                 <tr>
-                                    <td colSpan="8">Nenhum atendimento encontrado com esses filtros.</td>
+                                    <td colSpan="9">Nenhum atendimento encontrado com esses filtros.</td>
                                 </tr>
                             )}
                         </tbody>

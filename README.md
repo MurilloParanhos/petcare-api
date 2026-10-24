@@ -21,6 +21,7 @@ O projeto começou com o front-end em HTML, CSS e JavaScript puro e foi migrado 
 - React
 - Vite
 - Recharts (gráficos)
+- react-datepicker e date-fns (calendário em português)
 
 ## Funcionalidades
 
@@ -30,6 +31,7 @@ O projeto começou com o front-end em HTML, CSS e JavaScript puro e foi migrado 
 - Valor cobrado gravado em cada atendimento, para que reajustes de preço não alterem o faturamento passado
 - CRUD de clientes e de animais
 - Cadastro, edição e agendamento de atendimentos, vinculados ao cliente e ao pet atendido
+- Agenda das 09:00 às 17:00: cada serviço tem uma duração, o sistema sugere o primeiro horário livre do dia e a API recusa horários que se sobrepõem
 - Destaque visual de atendimentos realizados e agendados
 - Lista de clientes inativos (sem atendimento há mais de 60 dias), com atalho para agendar
 - Dashboard com:
@@ -142,7 +144,7 @@ Todas as rotas, exceto cadastro de usuário e login, exigem o cabeçalho `Author
 | GET | `/api/atendimentos/inativos` | Sim | Lista clientes sem atendimento há mais de 60 dias |
 | GET | `/api/servicos` | Sim | Lista o catálogo de serviços |
 | POST | `/api/servicos` | Sim | Cadastra um serviço |
-| PUT | `/api/servicos/:id` | Sim | Atualiza nome, preço ou ativa/desativa um serviço |
+| PUT | `/api/servicos/:id` | Sim | Atualiza nome, preço, duração ou ativa/desativa um serviço |
 | GET | `/api/status` | Não | Verifica a conexão com o banco |
 
 ## Próximos passos

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { api } from '../api';
 import { formatarMoeda } from '../utils';
 
-const FORM_VAZIO = { nome: '', preco: '' };
+const FORM_VAZIO = { nome: '', preco: '', duracao_minutos: '60' };
 
 function Servicos({ servicos, recarregar }) {
     const [form, setForm] = useState(FORM_VAZIO);
@@ -14,7 +14,7 @@ function Servicos({ servicos, recarregar }) {
     }
 
     function editar(servico) {
-        setForm({ nome: servico.nome, preco: servico.preco });
+        setForm({ nome: servico.nome, preco: servico.preco, duracao_minutos: servico.duracao_minutos });
         setEditando(servico);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -30,18 +30,18 @@ function Servicos({ servicos, recarregar }) {
         setMsg('');
 
         const nome = form.nome.trim();
-        const preco = form.preco;
+        const { preco, duracao_minutos } = form;
 
-        if (!nome || preco === '') {
-            setMsg('Preencha o nome e o preço.');
+        if (!nome || preco === '' || !duracao_minutos) {
+            setMsg('Preencha o nome, o preço e a duração.');
             return;
         }
 
         try {
             if (editando) {
-                await api(`/api/servicos/${editando.id}`, { method: 'PUT', body: { nome, preco, ativo: editando.ativo } });
+                await api(`/api/servicos/${editando.id}`, { method: 'PUT', body: { nome, preco, duracao_minutos, ativo: editando.ativo } });
             } else {
-                await api('/api/servicos', { method: 'POST', body: { nome, preco } });
+                await api('/api/servicos', { method: 'POST', body: { nome, preco, duracao_minutos } });
             }
             cancelar();
             recarregar();
@@ -56,7 +56,7 @@ function Servicos({ servicos, recarregar }) {
         try {
             await api(`/api/servicos/${servico.id}`, {
                 method: 'PUT',
-                body: { nome: servico.nome, preco: servico.preco, ativo: !servico.ativo }
+                body: { nome: servico.nome, preco: servico.preco, duracao_minutos: servico.duracao_minutos, ativo: !servico.ativo }
             });
             recarregar();
         } catch (erro) {
@@ -78,6 +78,10 @@ function Servicos({ servicos, recarregar }) {
                     <label htmlFor="servicoPreco">Preço (R$)</label>
                     <input type="number" id="servicoPreco" name="preco" min="0" step="0.01" value={form.preco} onChange={alterarCampo} />
                 </div>
+                <div>
+                    <label htmlFor="servicoDuracao">Duração (min)</label>
+                    <input type="number" id="servicoDuracao" name="duracao_minutos" min="15" step="15" value={form.duracao_minutos} onChange={alterarCampo} />
+                </div>
                 <button type="submit">{editando ? 'Salvar edição' : 'Adicionar serviço'}</button>
                 {editando && <button type="button" onClick={cancelar}>Cancelar</button>}
                 <p className="erro">{msg}</p>
@@ -88,6 +92,7 @@ function Servicos({ servicos, recarregar }) {
                     <tr>
                         <th>Serviço</th>
                         <th>Preço</th>
+                        <th>Duração</th>
                         <th>Situação</th>
                         <th>Ações</th>
                     </tr>
@@ -97,6 +102,7 @@ function Servicos({ servicos, recarregar }) {
                         <tr key={servico.id} className={servico.ativo ? '' : 'linha-inativa'}>
                             <td>{servico.nome}</td>
                             <td>{formatarMoeda(servico.preco)}</td>
+                            <td>{servico.duracao_minutos} min</td>
                             <td>{servico.ativo ? 'Ativo' : 'Desativado'}</td>
                             <td>
                                 <button className="btn-editar" onClick={() => editar(servico)}>Editar</button>
@@ -111,7 +117,7 @@ function Servicos({ servicos, recarregar }) {
                     ))}
                     {servicos.length === 0 && (
                         <tr>
-                            <td colSpan="4">Nenhum serviço cadastrado.</td>
+                            <td colSpan="5">Nenhum serviço cadastrado.</td>
                         </tr>
                     )}
                 </tbody>
