@@ -1,6 +1,8 @@
 import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { formatarMoeda } from '../utils';
 import { chaveDeOrdem, dataISO, faixaDeHorario } from '../agenda';
+import { usuarioLogado } from '../api';
+
 
 // Verde das barras: da mesma familia da marca, mas vivo o bastante para ler como dado
 const COR_BARRA = '#3a8a5c';
@@ -79,6 +81,8 @@ function agendadosDaquiPraFrente(atendimentos) {
 }
 
 function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes, animais, servicos, profissionais, onVerAtendimentos }) {
+    // Nome de quem fez login (vem do token), para o "Olá, Fulano!"
+    const nomeUsuario = usuarioLogado()?.nome ?? 'Usuário';
     const atendimentosNoMes = atendimentos.filter((a) => doMesAtual(a) && contaComoAtendimento(a)).length;
     const perdidosNoMes = atendimentos.filter((a) => doMesAtual(a) && !contaComoAtendimento(a)).length;
 
@@ -99,7 +103,7 @@ function Resumo({ totalClientes, totalAnimais, atendimentos, inativos, clientes,
 
     return (
         <div>
-            <h1>Olá!</h1>
+            <h1>Olá, {nomeUsuario}!</h1>
             <p>Aqui está um resumo do sistema.</p>
 
             <section className="cards">
