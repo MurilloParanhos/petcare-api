@@ -175,6 +175,7 @@ async function criar() {
 
         // Distribui os animais entre os clientes (alguns ficam com 2)
         const animaisPorCliente = {};
+        let totalVacinas = 0;
         for (let i = 0; i < ANIMAIS.length; i++) {
             const animal = ANIMAIS[i];
             const clienteId = clienteIds[i % clienteIds.length];
@@ -183,6 +184,21 @@ async function criar() {
                 [animal.nome, animal.especie, animal.raca, animal.idade, clienteId]
             );
             (animaisPorCliente[clienteId] ??= []).push(resultado.rows[0].id);
+
+            // Carteira de vacinacao: duas vacinas por pet, aplicadas entre 6 e 13 meses
+            // atras, com reforco anual. Assim algumas ja estao vencidas ou vencendo.
+            const vacinasDoPet = animal.especie === 'Gato' ? ['V4 felina', 'Antirrábica'] : ['V10', 'Antirrábica'];
+            for (const nomeDaVacina of vacinasDoPet) {
+                const aplicacao = new Date();
+                aplicacao.setDate(aplicacao.getDate() - 180 - Math.floor(aleatorio() * 215));
+                const proxima = new Date(aplicacao);
+                proxima.setFullYear(proxima.getFullYear() + 1);
+                await conexao.query(
+                    'INSERT INTO vacinas (animal_id, nome, data_aplicacao, proxima_dose) VALUES ($1, $2, $3, $4)',
+                    [resultado.rows[0].id, nomeDaVacina, formatarData(aplicacao), formatarData(proxima)]
+                );
+                totalVacinas++;
+            }
         }
 
         const ativos = clienteIds.slice(0, clienteIds.length - CLIENTES_INATIVOS);
@@ -305,7 +321,7 @@ async function criar() {
         }
 
         await conexao.query('COMMIT');
-        console.log(`Criados: ${CLIENTES.length} clientes, ${ANIMAIS.length} animais e ${totalAtendimentos} atendimentos de teste.`);
+        console.log(`Criados: ${CLIENTES.length} clientes, ${ANIMAIS.length} animais, ${totalVacinas} vacinas e ${totalAtendimentos} atendimentos de teste.`);
     } catch (erro) {
         await conexao.query('ROLLBACK');
         throw erro;

@@ -5,6 +5,7 @@ const ABAS = [
     { id: 'agenda', nome: 'Agenda', icone: 'fa-calendar-days' },
     { id: 'clientes', nome: 'Clientes', icone: 'fa-users' },
     { id: 'animais', nome: 'Animais', icone: 'fa-paw' },
+    { id: 'vacinas', nome: 'Vacinas', icone: 'fa-syringe' },
     { id: 'atendimentos', nome: 'Atendimentos', icone: 'fa-calendar-check' },
     { id: 'servicos', nome: 'Serviços', icone: 'fa-tags' },
     { id: 'equipe', nome: 'Equipe', icone: 'fa-user-group' }

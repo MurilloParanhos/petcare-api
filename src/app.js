@@ -9,6 +9,7 @@ const animalRoutes = require('./routes/animalRoutes');
 const atendimentoRoutes = require('./routes/atendimentoRoutes');
 const servicoRoutes = require('./routes/servicoRoutes');
 const profissionalRoutes = require('./routes/profissionalRoutes');
+const vacinaRoutes = require('./routes/vacinaRoutes');
 
 const app = express();
 app.use(express.json());
@@ -20,6 +21,7 @@ app.use('/api', animalRoutes);
 app.use('/api', atendimentoRoutes);
 app.use('/api', servicoRoutes);
 app.use('/api', profissionalRoutes);
+app.use('/api', vacinaRoutes);
 
 app.get('/api/status', async (req, res) => {
     try {

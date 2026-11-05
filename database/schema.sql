@@ -23,6 +23,16 @@ CREATE TABLE animais (
     cliente_id INTEGER REFERENCES clientes(id)
 );
 
+-- Carteira de vacinacao: cada linha e uma dose aplicada
+CREATE TABLE vacinas (
+    id SERIAL PRIMARY KEY,
+    animal_id INTEGER NOT NULL REFERENCES animais(id) ON DELETE CASCADE,
+    nome VARCHAR(100) NOT NULL,
+    data_aplicacao DATE NOT NULL,
+    proxima_dose DATE CHECK (proxima_dose IS NULL OR proxima_dose > data_aplicacao),
+    observacoes TEXT
+);
+
 CREATE TABLE profissionais (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,

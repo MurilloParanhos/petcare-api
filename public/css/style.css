@@ -1082,3 +1082,12 @@ th {
 .form-sucesso i {
     margin-top: 2px;
 }
+
+/* Aviso de vacinas vencendo, acima do formulario */
+.vacinas-vencendo {
+    margin: 10px 0 20px;
+}
+
+.vacinas-vencendo table {
+    margin-bottom: 0;
+}

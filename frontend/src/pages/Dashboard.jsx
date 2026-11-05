@@ -8,6 +8,7 @@ import Animais from '../components/Animais';
 import Atendimentos from '../components/Atendimentos';
 import Servicos from '../components/Servicos';
 import Equipe from '../components/Equipe';
+import Vacinas from '../components/Vacinas';
 
 function Dashboard({ onSair }) {
     const [aba, setAba] = useState('resumo');
@@ -17,6 +18,7 @@ function Dashboard({ onSair }) {
     const [inativos, setInativos] = useState([]);
     const [servicos, setServicos] = useState([]);
     const [profissionais, setProfissionais] = useState([]);
+    const [vacinas, setVacinas] = useState([]);
     // Dados que a Agenda manda para o formulario de Atendimentos (data, hora e profissional)
     const [preenchimento, setPreenchimento] = useState(null);
 
@@ -39,6 +41,14 @@ function Dashboard({ onSair }) {
     async function carregarServicos() {
         try {
             setServicos(await api('/api/servicos'));
+        } catch (erro) {
+            console.error(erro);
+        }
+    }
+
+    async function carregarVacinas() {
+        try {
+            setVacinas(await api('/api/vacinas'));
         } catch (erro) {
             console.error(erro);
         }
@@ -98,6 +108,7 @@ function Dashboard({ onSair }) {
         carregarAtendimentos();
         carregarServicos();
         carregarProfissionais();
+        carregarVacinas();
     }, []);
 
     return (
@@ -152,6 +163,9 @@ function Dashboard({ onSair }) {
                 )}
                 {aba === 'servicos' && (
                     <Servicos servicos={servicos} recarregar={carregarServicos} />
+                )}
+                {aba === 'vacinas' && (
+                    <Vacinas vacinas={vacinas} animais={animais} clientes={clientes} recarregar={carregarVacinas} />
                 )}
                 {aba === 'equipe' && (
                     <Equipe profissionais={profissionais} atendimentos={atendimentos} recarregar={carregarProfissionais} />
