@@ -1091,3 +1091,29 @@ th {
 .vacinas-vencendo table {
     margin-bottom: 0;
 }
+
+/* Relatorios: datas do periodo personalizado e botao de exportar */
+.relatorio-datas {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.relatorio-datas input {
+    width: 130px;
+}
+
+.filtros .relatorio-exportar {
+    margin-left: auto;
+    padding: 8px 14px;
+    font-size: 13px;
+}
+
+.relatorio-exportar i {
+    color: #1d6f42;
+}
+
+.relatorio-exportar:disabled {
+    opacity: 0.5;
+    cursor: default;
+}

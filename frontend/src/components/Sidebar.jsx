@@ -8,7 +8,8 @@ const ABAS = [
     { id: 'vacinas', nome: 'Vacinas', icone: 'fa-syringe' },
     { id: 'atendimentos', nome: 'Atendimentos', icone: 'fa-calendar-check' },
     { id: 'servicos', nome: 'Serviços', icone: 'fa-tags' },
-    { id: 'equipe', nome: 'Equipe', icone: 'fa-user-group' }
+    { id: 'equipe', nome: 'Equipe', icone: 'fa-user-group' },
+    { id: 'relatorios', nome: 'Relatórios', icone: 'fa-chart-column' }
 ];
 
 function Sidebar({ abaAtual, onTrocarAba, onSair, totalInativos }) {
