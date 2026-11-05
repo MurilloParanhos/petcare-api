@@ -704,31 +704,6 @@ th {
     color: #777;
 }
 
-.equipe {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
-    margin: 10px 0 30px;
-}
-
-.equipe ul {
-    list-style: none;
-    margin-top: 10px;
-}
-
-.equipe li {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 6px 0;
-}
-
-.equipe li i {
-    color: #3a8a5c;
-    width: 18px;
-    text-align: center;
-}
-
 /* O campo de busca interno do react-select nao deve herdar a borda e o
    espacamento dos inputs do formulario e dos filtros */
 .formulario .campo-selecao input,

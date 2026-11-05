@@ -6,7 +6,8 @@ const ABAS = [
     { id: 'clientes', nome: 'Clientes', icone: 'fa-users' },
     { id: 'animais', nome: 'Animais', icone: 'fa-paw' },
     { id: 'atendimentos', nome: 'Atendimentos', icone: 'fa-calendar-check' },
-    { id: 'servicos', nome: 'Serviços', icone: 'fa-tags' }
+    { id: 'servicos', nome: 'Serviços', icone: 'fa-tags' },
+    { id: 'equipe', nome: 'Equipe', icone: 'fa-user-group' }
 ];
 
 function Sidebar({ abaAtual, onTrocarAba, onSair, totalInativos }) {

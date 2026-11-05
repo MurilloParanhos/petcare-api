@@ -7,6 +7,7 @@ import Clientes from '../components/Clientes';
 import Animais from '../components/Animais';
 import Atendimentos from '../components/Atendimentos';
 import Servicos from '../components/Servicos';
+import Equipe from '../components/Equipe';
 
 function Dashboard({ onSair }) {
     const [aba, setAba] = useState('resumo');
@@ -150,7 +151,10 @@ function Dashboard({ onSair }) {
                     />
                 )}
                 {aba === 'servicos' && (
-                    <Servicos servicos={servicos} profissionais={profissionais} recarregar={carregarServicos} />
+                    <Servicos servicos={servicos} recarregar={carregarServicos} />
+                )}
+                {aba === 'equipe' && (
+                    <Equipe profissionais={profissionais} atendimentos={atendimentos} recarregar={carregarProfissionais} />
                 )}
             </main>
         </>

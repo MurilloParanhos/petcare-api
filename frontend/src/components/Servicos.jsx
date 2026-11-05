@@ -6,7 +6,7 @@ import CampoSelecao from './CampoSelecao';
 
 const FORM_VAZIO = { nome: '', preco: '', duracao_minutos: '60', funcao: 'tosador' };
 
-function Servicos({ servicos, profissionais, recarregar }) {
+function Servicos({ servicos, recarregar }) {
     const [form, setForm] = useState(FORM_VAZIO);
     const [editando, setEditando] = useState(null);
     const [msg, setMsg] = useState('');
@@ -150,24 +150,6 @@ function Servicos({ servicos, profissionais, recarregar }) {
                     )}
                 </tbody>
             </table>
-
-            <h2>Equipe</h2>
-            <p className="subtitulo-aba">Cada profissional tem a sua agenda; dois atendimentos no mesmo horário vão para profissionais diferentes.</p>
-            <section className="equipe">
-                {Object.entries(NOMES_DAS_FUNCOES).map(([funcao, nome]) => (
-                    <div key={funcao} className="painel">
-                        <h3>{nome}</h3>
-                        <ul>
-                            {profissionais.filter((p) => p.funcao === funcao).map((p) => (
-                                <li key={p.id}>
-                                    <i className={`fa-solid ${funcao === 'veterinario' ? 'fa-user-doctor' : 'fa-scissors'}`}></i>
-                                    {p.nome}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                ))}
-            </section>
         </div>
     );
 }
