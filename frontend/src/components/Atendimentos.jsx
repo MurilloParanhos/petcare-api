@@ -29,6 +29,13 @@ function Atendimentos({
         setSubAba('atendimentos');
         if (paraEditar) {
             formulario.editar(paraEditar);
+        } else if (!dados.data_atendimento) {
+            // Vindo da ficha do cliente: so o cliente ja vem escolhido
+            const nome = clientes.find((c) => c.id === dados.cliente_id)?.nome;
+            formulario.novoCom(
+                dados,
+                `Agendando para ${nome}. Escolha o serviço e a data e clique em "Registrar atendimento" para salvar.`
+            );
         } else {
             const [ano, mes, dia] = dados.data_atendimento.split('-');
             const profissional = profissionais.find((p) => p.id === dados.profissional_id)?.nome;

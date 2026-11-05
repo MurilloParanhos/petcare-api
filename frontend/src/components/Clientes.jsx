@@ -2,15 +2,18 @@ import { useState } from 'react';
 import { api } from '../api';
 import { formatarTelefone, mascaraTelefone, normalizar, paginar, somenteNumeros } from '../utils';
 import Paginacao from './Paginacao';
+import FichaCliente from './clientes/FichaCliente';
 
 const FORM_VAZIO = { nome: '', telefone: '', email: '' };
 
-function Clientes({ clientes, recarregar }) {
+function Clientes({ clientes, animais, atendimentos, vacinas, servicos, profissionais, recarregar, onAgendar }) {
     const [form, setForm] = useState(FORM_VAZIO);
     const [editandoId, setEditandoId] = useState(null);
     const [msg, setMsg] = useState('');
     const [busca, setBusca] = useState('');
     const [pagina, setPagina] = useState(1);
+    // Cliente cuja ficha esta aberta (null = mostra a lista)
+    const [fichaId, setFichaId] = useState(null);
 
     // Busca no nome, telefone e email ao mesmo tempo, em ordem alfabetica.
     // O telefone e comparado so pelos numeros, entao "(12) 9888" tambem acha.
@@ -92,6 +95,28 @@ function Clientes({ clientes, recarregar }) {
         }
     }
 
+    const clienteDaFicha = clientes.find((c) => c.id === fichaId);
+    if (clienteDaFicha) {
+        return (
+            <FichaCliente
+                cliente={clienteDaFicha}
+                animais={animais}
+                atendimentos={atendimentos}
+                vacinas={vacinas}
+                servicos={servicos}
+                profissionais={profissionais}
+                onVoltar={() => setFichaId(null)}
+                onEditar={(cliente) => { setFichaId(null); editar(cliente); }}
+                onAgendar={(cliente) => onAgendar(cliente.id)}
+            />
+        );
+    }
+
+    function abrirFicha(id) {
+        setFichaId(id);
+        window.scrollTo({ top: 0 });
+    }
+
     return (
         <div>
             <h2>Clientes</h2>
@@ -135,10 +160,13 @@ function Clientes({ clientes, recarregar }) {
                 <tbody>
                     {paginacao.itens.map((cliente) => (
                         <tr key={cliente.id}>
-                            <td>{cliente.nome}</td>
+                            <td>
+                                <button className="link-ficha" onClick={() => abrirFicha(cliente.id)}>{cliente.nome}</button>
+                            </td>
                             <td>{formatarTelefone(cliente.telefone)}</td>
                             <td>{cliente.email}</td>
-                            <td>
+                            <td className="acoes">
+                                <button className="btn-secundario" onClick={() => abrirFicha(cliente.id)}>Ficha</button>
                                 <button className="btn-editar" onClick={() => editar(cliente)}>Editar</button>
                                 <button className="btn-excluir" onClick={() => excluir(cliente.id)}>Excluir</button>
                             </td>

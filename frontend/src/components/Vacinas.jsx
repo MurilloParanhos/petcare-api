@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { api } from '../api';
 import { formatarTelefone, normalizar, paginar } from '../utils';
 import { dataISO } from '../agenda';
+import { situacaoDaDose, ultimasDoses } from '../vacinas';
 import CampoData from './CampoData';
 import CampoSelecao from './CampoSelecao';
 import Paginacao from './Paginacao';
@@ -26,20 +27,8 @@ function umAnoDepois(data) {
     return dataISO(nova);
 }
 
-function diasEntre(de, ate) {
-    return Math.round((new Date(`${ate}T00:00:00`) - new Date(`${de}T00:00:00`)) / 86400000);
-}
-
 function formatarData(valor) {
     return valor ? new Date(valor).toLocaleDateString('pt-BR') : '-';
-}
-
-// "Atrasada ha 3 dias", "Vence hoje" ou "Vence em 12 dias", com a cor do aviso
-function situacaoDaDose(proximaDose, hoje) {
-    const dias = diasEntre(hoje, proximaDose);
-    if (dias < 0) return { texto: `Atrasada há ${-dias} dia(s)`, classe: 'status-faltou' };
-    if (dias === 0) return { texto: 'Vence hoje', classe: 'status-faltou' };
-    return { texto: `Vence em ${dias} dia(s)`, classe: 'status-agendado' };
 }
 
 function Vacinas({ vacinas, animais, clientes, recarregar }) {
@@ -60,17 +49,8 @@ function Vacinas({ vacinas, animais, clientes, recarregar }) {
         return clientes.find((c) => c.id === pet?.cliente_id);
     }
 
-    // Para o aviso de vencimento so conta a dose mais recente de cada vacina
-    // de cada pet: se a V10 ja foi reaplicada, a dose antiga nao avisa mais
-    const ultimasDoses = {};
-    vacinas.forEach((vacina) => {
-        const chave = `${vacina.animal_id}|${normalizar(vacina.nome)}`;
-        const atual = ultimasDoses[chave];
-        if (!atual || dataISO(vacina.data_aplicacao) > dataISO(atual.data_aplicacao)) ultimasDoses[chave] = vacina;
-    });
-
     const limiteDoAviso = somarDias(hoje, DIAS_DE_AVISO);
-    const vencendo = Object.values(ultimasDoses)
+    const vencendo = ultimasDoses(vacinas)
         .filter((v) => v.proxima_dose && dataISO(v.proxima_dose) <= limiteDoAviso)
         .sort((a, b) => dataISO(a.proxima_dose).localeCompare(dataISO(b.proxima_dose)));
 
@@ -186,7 +166,7 @@ function Vacinas({ vacinas, animais, clientes, recarregar }) {
                             {vencendo.map((vacina) => {
                                 const pet = petDaVacina(vacina);
                                 const dono = donoDoPet(pet);
-                                const situacao = situacaoDaDose(dataISO(vacina.proxima_dose), hoje);
+                                const situacao = situacaoDaDose(vacina.proxima_dose, hoje, DIAS_DE_AVISO);
                                 return (
                                     <tr key={vacina.id}>
                                         <td>{pet?.nome}</td>

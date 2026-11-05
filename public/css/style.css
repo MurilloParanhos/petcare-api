@@ -1152,3 +1152,63 @@ th {
 .config-dia input {
     accent-color: #2e5940;
 }
+
+/* Ficha do cliente */
+.link-ficha {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: #1f3d2c;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: left;
+}
+
+.link-ficha:hover {
+    text-decoration: underline;
+}
+
+.ficha-voltar {
+    margin-bottom: 15px;
+}
+
+.ficha-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ficha-acoes .btn-secundario,
+.ficha-acoes .btn-concluir {
+    padding: 9px 14px;
+    font-size: 13px;
+}
+
+.ficha-secao {
+    margin: 10px 0 12px;
+    color: #1f3d2c;
+}
+
+.ficha-pets {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.ficha-vacinas {
+    list-style: none;
+}
+
+.ficha-vacinas li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-top: 1px solid #f0f0f0;
+    font-size: 14px;
+}

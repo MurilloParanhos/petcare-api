@@ -161,7 +161,16 @@ function Dashboard({ onSair }) {
                     />
                 )}
                 {aba === 'clientes' && (
-                    <Clientes clientes={clientes} recarregar={carregarClientes} />
+                    <Clientes
+                        clientes={clientes}
+                        animais={animais}
+                        atendimentos={atendimentos}
+                        vacinas={vacinas}
+                        servicos={servicos}
+                        profissionais={profissionais}
+                        recarregar={carregarClientes}
+                        onAgendar={(clienteId) => agendarPelaAgenda({ cliente_id: clienteId })}
+                    />
                 )}
                 {aba === 'animais' && (
                     <Animais animais={animais} clientes={clientes} recarregar={carregarAnimais} />
