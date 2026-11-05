@@ -78,3 +78,14 @@ INSERT INTO servicos (nome, preco, duracao_minutos, funcao) VALUES
     ('Tosa higiênica', 40.00, 30, 'tosador'),
     ('Consulta veterinária', 150.00, 30, 'veterinario'),
     ('Vacinação', 120.00, 30, 'veterinario');
+
+-- Configuracoes editaveis pela tela (por enquanto, as regras da agenda)
+CREATE TABLE configuracoes (
+    chave VARCHAR(50) PRIMARY KEY,
+    valor JSONB NOT NULL
+);
+
+INSERT INTO configuracoes (chave, valor) VALUES (
+    'agenda',
+    '{"abertura": "09:00", "fechamento": "17:00", "almoco": {"inicio": "12:00", "fim": "13:00"}, "diasFechados": [0], "intervaloMinutos": 30}'
+);

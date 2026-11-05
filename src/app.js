@@ -10,6 +10,7 @@ const atendimentoRoutes = require('./routes/atendimentoRoutes');
 const servicoRoutes = require('./routes/servicoRoutes');
 const profissionalRoutes = require('./routes/profissionalRoutes');
 const vacinaRoutes = require('./routes/vacinaRoutes');
+const configuracaoRoutes = require('./routes/configuracaoRoutes');
 
 const app = express();
 app.use(express.json());
@@ -22,6 +23,7 @@ app.use('/api', atendimentoRoutes);
 app.use('/api', servicoRoutes);
 app.use('/api', profissionalRoutes);
 app.use('/api', vacinaRoutes);
+app.use('/api', configuracaoRoutes);
 
 app.get('/api/status', async (req, res) => {
     try {

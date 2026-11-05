@@ -1,18 +1,35 @@
 // Regras da agenda: horario de funcionamento, intervalo entre horarios,
-// pausa para almoco e dias fechados. Elas vem de shared/regrasAgenda.json,
-// o mesmo arquivo que a API usa para validar (um lugar so para mudar).
+// pausa para almoco e dias fechados. Comecam com os valores padrao de
+// shared/regrasAgenda.json e sao trocadas pelas da tela Configuracoes
+// (vindas da API) com aplicarRegras(), quando o sistema abre ou quando
+// alguem salva novas regras.
 // Cada profissional tem a sua agenda: dois atendimentos no mesmo horario
 // sao possiveis se forem com profissionais diferentes.
 // Os horarios sao trabalhados em minutos desde a meia-noite (09:00 = 540).
-import regras from '../../shared/regrasAgenda.json';
+import regrasPadrao from '../../shared/regrasAgenda.json';
 
-export const ABERTURA = emMinutos(regras.abertura);
-export const FECHAMENTO = emMinutos(regras.fechamento);
-export const INTERVALO = regras.intervaloMinutos;
-export const ALMOCO_INICIO = emMinutos(regras.almoco.inicio);
-export const ALMOCO_FIM = emMinutos(regras.almoco.fim);
+// "let" exportado: quem importa sempre enxerga o valor atual depois de aplicarRegras()
+export let ABERTURA;
+export let FECHAMENTO;
+export let INTERVALO;
+export let ALMOCO_INICIO;
+export let ALMOCO_FIM;
 // Dias da semana sem atendimento (0 = domingo, como no getDay() do JavaScript)
-export const DIAS_FECHADOS = regras.diasFechados;
+export let DIAS_FECHADOS;
+// As regras como vieram ("09:00", "17:00"...), para mostrar na tela
+export let REGRAS;
+
+export function aplicarRegras(regras) {
+    REGRAS = regras;
+    ABERTURA = emMinutos(regras.abertura);
+    FECHAMENTO = emMinutos(regras.fechamento);
+    INTERVALO = Number(regras.intervaloMinutos);
+    ALMOCO_INICIO = emMinutos(regras.almoco.inicio);
+    ALMOCO_FIM = emMinutos(regras.almoco.fim);
+    DIAS_FECHADOS = regras.diasFechados;
+}
+
+aplicarRegras(regrasPadrao);
 
 const NOMES_DOS_DIAS = ['domingos', 'segundas', 'terças', 'quartas', 'quintas', 'sextas', 'sábados'];
 

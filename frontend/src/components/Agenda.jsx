@@ -9,8 +9,13 @@ import CampoData from './CampoData';
 // Altura, em pixels, de cada faixa de 30 minutos na grade
 const ALTURA_DA_FAIXA = 48;
 
-const FAIXAS = [];
-for (let inicio = ABERTURA; inicio < FECHAMENTO; inicio += INTERVALO) FAIXAS.push(inicio);
+// Linhas da grade (uma por intervalo). E uma funcao, e nao uma lista fixa,
+// porque o horario de funcionamento pode mudar em Configuracoes
+function faixasDoDia() {
+    const faixas = [];
+    for (let inicio = ABERTURA; inicio < FECHAMENTO; inicio += INTERVALO) faixas.push(inicio);
+    return faixas;
+}
 
 // Minutos desde a abertura -> posicao vertical na grade, em pixels
 function posicao(minutos) {
@@ -48,6 +53,7 @@ function Agenda({ atendimentos, clientes, animais, servicos, profissionais, muda
     }, []);
 
     const hoje = dataISO(agora);
+    const FAIXAS = faixasDoDia();
     const equipe = profissionais.filter((p) => p.ativo);
     const fechado = diaFechado(data);
 

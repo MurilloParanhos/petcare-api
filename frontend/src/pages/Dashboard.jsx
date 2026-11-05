@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { aplicarRegras } from '../agenda';
 import Sidebar from '../components/Sidebar';
 import Resumo from '../components/Resumo';
 import Agenda from '../components/Agenda';
@@ -10,6 +11,7 @@ import Servicos from '../components/Servicos';
 import Equipe from '../components/Equipe';
 import Vacinas from '../components/Vacinas';
 import Relatorios from '../components/Relatorios';
+import Configuracoes from '../components/Configuracoes';
 
 function Dashboard({ onSair }) {
     const [aba, setAba] = useState('resumo');
@@ -20,6 +22,8 @@ function Dashboard({ onSair }) {
     const [servicos, setServicos] = useState([]);
     const [profissionais, setProfissionais] = useState([]);
     const [vacinas, setVacinas] = useState([]);
+    // Regras da agenda vindas da API; guardar no estado faz a tela redesenhar quando mudam
+    const [regras, setRegras] = useState(null);
     // Dados que a Agenda manda para o formulario de Atendimentos (data, hora e profissional)
     const [preenchimento, setPreenchimento] = useState(null);
 
@@ -42,6 +46,19 @@ function Dashboard({ onSair }) {
     async function carregarServicos() {
         try {
             setServicos(await api('/api/servicos'));
+        } catch (erro) {
+            console.error(erro);
+        }
+    }
+
+    function usarRegras(novasRegras) {
+        aplicarRegras(novasRegras);
+        setRegras(novasRegras);
+    }
+
+    async function carregarRegras() {
+        try {
+            usarRegras(await api('/api/configuracoes/agenda'));
         } catch (erro) {
             console.error(erro);
         }
@@ -110,6 +127,7 @@ function Dashboard({ onSair }) {
         carregarServicos();
         carregarProfissionais();
         carregarVacinas();
+        carregarRegras();
     }, []);
 
     return (
@@ -170,6 +188,10 @@ function Dashboard({ onSair }) {
                 )}
                 {aba === 'relatorios' && (
                     <Relatorios atendimentos={atendimentos} clientes={clientes} animais={animais} profissionais={profissionais} />
+                )}
+                {aba === 'configuracoes' && (
+                    // A key so muda quando as regras chegam da API, para o formulario comecar com elas
+                    <Configuracoes key={regras ? 'carregadas' : 'padrao'} onSalvo={usarRegras} />
                 )}
                 {aba === 'equipe' && (
                     <Equipe profissionais={profissionais} atendimentos={atendimentos} recarregar={carregarProfissionais} />

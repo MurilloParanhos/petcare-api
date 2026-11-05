@@ -9,7 +9,8 @@ const ABAS = [
     { id: 'atendimentos', nome: 'Atendimentos', icone: 'fa-calendar-check' },
     { id: 'servicos', nome: 'Serviços', icone: 'fa-tags' },
     { id: 'equipe', nome: 'Equipe', icone: 'fa-user-group' },
-    { id: 'relatorios', nome: 'Relatórios', icone: 'fa-chart-column' }
+    { id: 'relatorios', nome: 'Relatórios', icone: 'fa-chart-column' },
+    { id: 'configuracoes', nome: 'Configurações', icone: 'fa-gear' }
 ];
 
 function Sidebar({ abaAtual, onTrocarAba, onSair, totalInativos }) {

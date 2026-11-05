@@ -7,8 +7,8 @@
 // clientes junto com os animais e atendimentos deles, e nada mais.
 
 const pool = require('../config/db');
-// Mesmas regras de horario da API e do front
-const regras = require('../../shared/regrasAgenda.json');
+// Mesmas regras de horario da API (as da tela Configuracoes)
+const { obterRegras, emMinutosDasRegras } = require('../regrasAgenda');
 
 const DOMINIO_TESTE = '@teste.petcare';
 // Marca usada em versoes antigas deste script; a limpeza ainda apaga quem tiver
@@ -215,11 +215,10 @@ async function criar() {
 
         // Proximo horario livre de cada profissional em cada dia, em minutos.
         // Comeca depois dos atendimentos que ja existem, para nao encavalar.
-        const emMinutos = (hora) => Number(hora.slice(0, 2)) * 60 + Number(hora.slice(3, 5));
-        const ABERTURA = emMinutos(regras.abertura);
-        const FECHAMENTO = emMinutos(regras.fechamento);
-        const ALMOCO_INICIO = emMinutos(regras.almoco.inicio);
-        const ALMOCO_FIM = emMinutos(regras.almoco.fim);
+        const regras = await obterRegras(conexao);
+        const {
+            abertura: ABERTURA, fechamento: FECHAMENTO, almocoInicio: ALMOCO_INICIO, almocoFim: ALMOCO_FIM
+        } = emMinutosDasRegras(regras);
         const proximoLivre = {};
         const ocupados = await conexao.query(
             `SELECT to_char(a.data_atendimento, 'YYYY-MM-DD') AS dia, a.profissional_id,

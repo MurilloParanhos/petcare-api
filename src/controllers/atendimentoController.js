@@ -1,20 +1,7 @@
 const pool = require('../config/db');
-// Horario de funcionamento, almoco e dias fechados. O mesmo arquivo e lido
-// pelo front (frontend/src/agenda.js), entao a regra fica num lugar so.
-const regras = require('../../shared/regrasAgenda.json');
-
-function emMinutos(hora) {
-    const [h, m] = hora.split(':').map(Number);
-    return h * 60 + m;
-}
-
-// Horarios em minutos desde a meia-noite (09:00 = 540)
-const ABERTURA = emMinutos(regras.abertura);
-const FECHAMENTO = emMinutos(regras.fechamento);
-const ALMOCO_INICIO = emMinutos(regras.almoco.inicio);
-const ALMOCO_FIM = emMinutos(regras.almoco.fim);
-const DIAS_FECHADOS = regras.diasFechados; // 0 = domingo, como no getDay()
-const NOMES_DOS_DIAS = ['domingos', 'segundas', 'terças', 'quartas', 'quintas', 'sextas', 'sábados'];
+// Horario de funcionamento, almoco e dias fechados vem da tela Configuracoes
+// (tabela configuracoes) e sao lidos a cada atendimento salvo
+const { obterRegras, emMinutos, emMinutosDasRegras, NOMES_DOS_DIAS } = require('../regrasAgenda');
 
 const STATUS = ['agendado', 'concluido', 'cancelado', 'faltou'];
 
@@ -39,12 +26,13 @@ function statusAntesDaHora(status, data) {
 }
 
 // Confere almoco e dia fechado. Devolve a mensagem de erro ou null.
-function foraDoFuncionamento(data, inicio, duracao) {
+function foraDoFuncionamento(regras, data, inicio, duracao) {
+    const { almocoInicio, almocoFim, diasFechados } = emMinutosDasRegras(regras);
     const diaDaSemana = new Date(`${data}T00:00:00`).getDay();
-    if (DIAS_FECHADOS.includes(diaDaSemana)) {
+    if (diasFechados.includes(diaDaSemana)) {
         return `O pet shop não abre aos ${NOMES_DOS_DIAS[diaDaSemana]}. Escolha outra data.`;
     }
-    if (inicio < ALMOCO_FIM && ALMOCO_INICIO < inicio + duracao) {
+    if (inicio < almocoFim && almocoInicio < inicio + duracao) {
         return `Esse horário pega o almoço (${regras.almoco.inicio} às ${regras.almoco.fim}). Escolha outro horário.`;
     }
     return null;
@@ -145,13 +133,11 @@ async function prepararAtendimento(corpo, { novo, id = 0 }) {
     }
 
     const inicio = emMinutos(hora_atendimento);
-    if (inicio < ABERTURA || inicio + servico.duracao_minutos > FECHAMENTO) {
-        return { erro: `Esse serviço dura ${servico.duracao_minutos} min e precisa caber entre ${regras.abertura} e ${regras.fechamento}.` };
-    }
 
-    // Almoco e domingo valem para atendimentos novos e para remarcacoes.
-    // Um atendimento antigo que ja estava nesse horario pode ser editado
-    // (trocar observacao, valor...) sem precisar mudar de horario.
+    // Expediente, almoco e dias fechados valem para atendimentos novos e para
+    // remarcacoes. Um atendimento que ja estava num horario que deixou de valer
+    // (porque as regras mudaram em Configuracoes) pode ser editado sem mudar
+    // de horario (trocar observacao, valor...).
     let mudouHorario = novo;
     if (!novo) {
         const atual = (await pool.query('SELECT data_atendimento, hora_atendimento FROM atendimentos WHERE id = $1', [id])).rows[0];
@@ -160,7 +146,13 @@ async function prepararAtendimento(corpo, { novo, id = 0 }) {
             || String(atual.hora_atendimento).slice(0, 5) !== hora_atendimento.slice(0, 5);
     }
     if (mudouHorario) {
-        const erroFuncionamento = foraDoFuncionamento(String(data_atendimento).slice(0, 10), inicio, servico.duracao_minutos);
+        const regras = await obterRegras();
+        const { abertura, fechamento } = emMinutosDasRegras(regras);
+        if (inicio < abertura || inicio + servico.duracao_minutos > fechamento) {
+            return { erro: `Esse serviço dura ${servico.duracao_minutos} min e precisa caber entre ${regras.abertura} e ${regras.fechamento}.` };
+        }
+
+        const erroFuncionamento = foraDoFuncionamento(regras, String(data_atendimento).slice(0, 10), inicio, servico.duracao_minutos);
         if (erroFuncionamento) {
             return { erro: erroFuncionamento };
         }
