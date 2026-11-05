@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { formatarMoeda, normalizar, paginar } from '../../utils';
-import { chaveDeOrdem, estaAtrasado, faixaDeHorario, STATUS_DO_ATENDIMENTO } from '../../agenda';
+import { chaveDeOrdem, estaAtrasado, faixaDeHorario, jaChegouODia, STATUS_DO_ATENDIMENTO } from '../../agenda';
 import Paginacao from '../Paginacao';
 import CampoSelecao from '../CampoSelecao';
 
@@ -140,8 +140,13 @@ function TabelaAtendimentos({ atendimentos, clientes, animais, servicos, profiss
                                 <button className="btn-editar" onClick={() => onEditar(atendimento)}>Editar</button>
                                 {atendimento.status === 'agendado' ? (
                                     <>
-                                        <button className="btn-concluir" onClick={() => mudarStatus(atendimento, 'concluido')}>Concluir</button>
-                                        <button className="btn-secundario" onClick={() => mudarStatus(atendimento, 'faltou')}>Faltou</button>
+                                        {/* Concluir e Faltou so aparecem a partir do dia do atendimento */}
+                                        {jaChegouODia(atendimento) && (
+                                            <>
+                                                <button className="btn-concluir" title="O atendimento foi realizado" onClick={() => mudarStatus(atendimento, 'concluido')}>Concluir</button>
+                                                <button className="btn-secundario" title="O cliente não compareceu" onClick={() => mudarStatus(atendimento, 'faltou')}>Faltou</button>
+                                            </>
+                                        )}
                                         <button className="btn-excluir" onClick={() => mudarStatus(atendimento, 'cancelado')}>Cancelar</button>
                                     </>
                                 ) : (

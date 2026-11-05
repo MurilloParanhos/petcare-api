@@ -1,4 +1,4 @@
-import { diaFechado, STATUS_DO_ATENDIMENTO, textoDiasFechados } from '../../agenda';
+import { dataISO, diaFechado, STATUS_DO_ATENDIMENTO, textoDiasFechados } from '../../agenda';
 import CampoData from '../CampoData';
 import CampoSelecao from '../CampoSelecao';
 
@@ -6,7 +6,7 @@ import CampoSelecao from '../CampoSelecao';
 // recebido aqui em "formulario".
 function FormularioAtendimento({ formulario, clientes }) {
     const {
-        form, editandoId, msg,
+        form, editandoId, msg, sucesso, aviso,
         animaisDoCliente, servicosDoFormulario, horariosDoFormulario, profissionaisDoFormulario,
         alterarCampo, definirCampo, escolherCliente, escolherServico, escolherData, escolherHora,
         cancelar, salvar
@@ -14,8 +14,20 @@ function FormularioAtendimento({ formulario, clientes }) {
 
     const petsDoCliente = animaisDoCliente(form.cliente_id);
 
+    // Atendimento que ainda nao aconteceu nao pode ser marcado como concluido ou falta
+    const aindaNaoAconteceu = form.data_atendimento > dataISO(new Date());
+    const opcoesDeStatus = Object.entries(STATUS_DO_ATENDIMENTO)
+        .filter(([valor]) => !(aindaNaoAconteceu && (valor === 'concluido' || valor === 'faltou')))
+        .map(([valor, info]) => ({ valor, rotulo: info.nome }));
+
     return (
         <form className="formulario" onSubmit={salvar}>
+            {aviso && (
+                <p className="form-aviso">
+                    <i className="fa-solid fa-circle-info"></i>
+                    <span>{aviso}</span>
+                </p>
+            )}
             <div>
                 <label htmlFor="atendimentoCliente">Cliente</label>
                 <CampoSelecao
@@ -94,7 +106,7 @@ function FormularioAtendimento({ formulario, clientes }) {
                     <CampoSelecao
                         id="atendimentoStatus"
                         valor={form.status}
-                        opcoes={Object.entries(STATUS_DO_ATENDIMENTO).map(([valor, info]) => ({ valor, rotulo: info.nome }))}
+                        opcoes={opcoesDeStatus}
                         onChange={(valor) => definirCampo('status', valor)}
                         buscavel={false}
                     />
@@ -103,6 +115,12 @@ function FormularioAtendimento({ formulario, clientes }) {
             <button type="submit">{editandoId ? 'Salvar edição' : 'Registrar atendimento'}</button>
             {editandoId && <button type="button" onClick={cancelar}>Cancelar</button>}
             <p className="erro">{msg}</p>
+            {sucesso && (
+                <p className="form-sucesso">
+                    <i className="fa-solid fa-circle-check"></i>
+                    <span>{sucesso}</span>
+                </p>
+            )}
         </form>
     );
 }

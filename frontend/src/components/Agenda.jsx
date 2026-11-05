@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { formatarMoeda, formatarTelefone } from '../utils';
 import {
     ABERTURA, ALMOCO_FIM, ALMOCO_INICIO, FECHAMENTO, INTERVALO, NOMES_DAS_FUNCOES, STATUS_DO_ATENDIMENTO,
-    dataISO, diaFechado, emMinutos, faixaDeHorario, horaTexto, pegaOAlmoco, textoDiasFechados
+    dataISO, diaFechado, emMinutos, faixaDeHorario, horaTexto, jaChegouODia, pegaOAlmoco, textoDiasFechados
 } from '../agenda';
 import CampoData from './CampoData';
 
@@ -261,8 +261,13 @@ function Agenda({ atendimentos, clientes, animais, servicos, profissionais, muda
                     <div className="agenda-detalhe-acoes">
                         {selecionado.status === 'agendado' ? (
                             <>
-                                <button className="btn-concluir" onClick={() => mudarStatus(selecionado, 'concluido')}>Concluir</button>
-                                <button className="btn-secundario" onClick={() => mudarStatus(selecionado, 'faltou')}>Faltou</button>
+                                {/* Concluir e Faltou so aparecem a partir do dia do atendimento */}
+                                {jaChegouODia(selecionado) && (
+                                    <>
+                                        <button className="btn-concluir" title="O atendimento foi realizado" onClick={() => mudarStatus(selecionado, 'concluido')}>Concluir</button>
+                                        <button className="btn-secundario" title="O cliente não compareceu" onClick={() => mudarStatus(selecionado, 'faltou')}>Faltou</button>
+                                    </>
+                                )}
                                 <button className="btn-excluir" onClick={() => mudarStatus(selecionado, 'cancelado')}>Cancelar</button>
                             </>
                         ) : (

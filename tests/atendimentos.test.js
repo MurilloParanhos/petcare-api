@@ -141,6 +141,22 @@ describe('Status do atendimento', () => {
         expect(reaberto.status).toBe(400);
     });
 
+    test('não deixa concluir nem marcar falta num atendimento que ainda não aconteceu', async () => {
+        const dados = { data_atendimento: TERCA, hora_atendimento: '15:00', profissional_id: ids.profissional('Marcos Vieira') };
+        const criado = await agendar(dados);
+        const futuro = criado.body;
+
+        const concluir = await api().patch(`/api/atendimentos/${futuro.id}/status`).send({ status: 'concluido' });
+        const faltou = await api().patch(`/api/atendimentos/${futuro.id}/status`).send({ status: 'faltou' });
+        const pelaEdicao = await api().put(`/api/atendimentos/${futuro.id}`).send(atendimento({ ...dados, status: 'concluido' }));
+
+        expect(criado.status).toBe(201);
+        expect(concluir.status).toBe(400);
+        expect(concluir.body.erro).toMatch(/ainda não aconteceu/);
+        expect(faltou.status).toBe(400);
+        expect(pelaEdicao.status).toBe(400);
+    });
+
     test('recusa status que não existe', async () => {
         const criado = (await agendar({ data_atendimento: TERCA, hora_atendimento: '14:00' })).body;
         const resposta = await api().patch(`/api/atendimentos/${criado.id}/status`).send({ status: 'perdido' });

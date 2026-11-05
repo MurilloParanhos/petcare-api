@@ -41,6 +41,12 @@ export const STATUS_DO_ATENDIMENTO = {
     faltou: { nome: 'Faltou', classe: 'status-faltou' }
 };
 
+// "Concluir" e "Faltou" so fazem sentido a partir do dia do atendimento
+// (a API tambem recusa antes disso)
+export function jaChegouODia(atendimento) {
+    return dataISO(atendimento.data_atendimento) <= dataISO(new Date());
+}
+
 // Agendado com data que ja passou: ficou sem baixa (nao foi concluido nem cancelado)
 export function estaAtrasado(atendimento) {
     return atendimento.status === 'agendado' && dataISO(atendimento.data_atendimento) < dataISO(new Date());

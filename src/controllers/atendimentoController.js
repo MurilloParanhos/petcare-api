@@ -29,6 +29,15 @@ function hojeISO() {
     return dataISO(new Date());
 }
 
+// "Concluido" e "faltou" dizem o que aconteceu no atendimento, entao so valem
+// a partir do dia dele. Devolve a mensagem de erro ou null.
+function statusAntesDaHora(status, data) {
+    if ((status === 'concluido' || status === 'faltou') && data > hojeISO()) {
+        return 'Esse atendimento ainda não aconteceu. Só dá para marcar como concluído ou falta a partir do dia dele.';
+    }
+    return null;
+}
+
 // Confere almoco e dia fechado. Devolve a mensagem de erro ou null.
 function foraDoFuncionamento(data, inicio, duracao) {
     const diaDaSemana = new Date(`${data}T00:00:00`).getDay();
@@ -89,6 +98,11 @@ async function prepararAtendimento(corpo, { novo, id = 0 }) {
     const status = corpo.status || (String(data_atendimento).slice(0, 10) < hojeISO() ? 'concluido' : 'agendado');
     if (!STATUS.includes(status)) {
         return { erro: 'Status inválido.' };
+    }
+
+    const erroDeStatus = statusAntesDaHora(status, String(data_atendimento).slice(0, 10));
+    if (erroDeStatus) {
+        return { erro: erroDeStatus };
     }
 
     if (animal_id) {
@@ -262,6 +276,11 @@ async function atualizarStatus(req, res) {
 
         if (!atendimento) {
             return res.status(404).json({ erro: 'Atendimento não encontrado' });
+        }
+
+        const erroDeStatus = statusAntesDaHora(status, dataISO(atendimento.data_atendimento));
+        if (erroDeStatus) {
+            return res.status(400).json({ erro: erroDeStatus });
         }
 
         if (atendimento.status === 'cancelado' && status !== 'cancelado') {

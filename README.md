@@ -105,14 +105,14 @@ As imagens usam apenas dados fictícios, gerados pelo script `npm run dados-test
 npm test
 ```
 
-São 44 testes de integração (Jest e Supertest) que chamam a API de verdade e cobrem:
+São 45 testes de integração (Jest e Supertest) que chamam a API de verdade e cobrem:
 
 - autenticação: sem token, token falso, token vencido, cadastro e login;
 - usuários: email único (sem diferenciar maiúsculas) e senha mínima;
 - clientes e animais: validações e exclusão bloqueada com mensagem clara quando há pets ou atendimentos;
 - catálogo de serviços: cadastro e validações (preço, duração, função, nome repetido);
 - regras da agenda: horário ocupado, mesmo horário com outro profissional, profissional de outra função, fora do expediente, almoço e domingo;
-- status: cancelar libera o horário e reabrir um cancelado cujo horário foi ocupado é recusado;
+- status: cancelar libera o horário, reabrir um cancelado cujo horário foi ocupado é recusado e não dá para concluir ou marcar falta antes do dia do atendimento;
 - clientes inativos.
 
 Os testes rodam em um schema separado do PostgreSQL (`testes_petcare`), recriado a partir do `database/schema.sql` a cada execução. Assim, eles nunca alteram os dados reais.

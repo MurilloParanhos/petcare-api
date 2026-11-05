@@ -14,6 +14,9 @@ export function useFormularioAtendimento({ atendimentos, animais, servicos, prof
     const [form, setForm] = useState(FORM_VAZIO);
     const [editandoId, setEditandoId] = useState(null);
     const [msg, setMsg] = useState('');
+    // Confirmacao depois de salvar e orientacao quando o formulario ja vem preenchido
+    const [sucesso, setSucesso] = useState('');
+    const [aviso, setAviso] = useState('');
 
     function animaisDoCliente(clienteId) {
         return animais.filter((a) => a.cliente_id === Number(clienteId));
@@ -101,34 +104,40 @@ export function useFormularioAtendimento({ atendimentos, animais, servicos, prof
 
     // ----- Acoes dos campos -----
 
+    // Qualquer mudanca no formulario apaga a confirmacao do ultimo salvamento
+    function mudarForm(novoForm) {
+        setForm(novoForm);
+        setSucesso('');
+    }
+
     function alterarCampo(evento) {
-        setForm({ ...form, [evento.target.name]: evento.target.value });
+        mudarForm({ ...form, [evento.target.name]: evento.target.value });
     }
 
     // Para os campos de selecao, que entregam o valor direto (sem evento)
     function definirCampo(nome, valor) {
-        setForm({ ...form, [nome]: valor });
+        mudarForm({ ...form, [nome]: valor });
     }
 
     // Trocar o cliente limpa o animal, porque o animal anterior era de outro dono
     function escolherCliente(clienteId) {
-        setForm({ ...form, cliente_id: clienteId, animal_id: animalPadrao(clienteId) });
+        mudarForm({ ...form, cliente_id: clienteId, animal_id: animalPadrao(clienteId) });
     }
 
     // Escolher o servico preenche o valor com o preco do catalogo (pode ser alterado)
     function escolherServico(servicoId) {
         const preco = servicos.find((s) => s.id === Number(servicoId))?.preco ?? '';
-        setForm(comAgendaSugerida({ ...form, servico_id: servicoId, valor: preco }));
+        mudarForm(comAgendaSugerida({ ...form, servico_id: servicoId, valor: preco }));
     }
 
     // Escolher a data ja sugere o primeiro horario livre do dia e um profissional
     function escolherData(data) {
-        setForm(comAgendaSugerida({ ...form, data_atendimento: data }));
+        mudarForm(comAgendaSugerida({ ...form, data_atendimento: data }));
     }
 
     // Trocar o horario mantem o profissional se ele estiver livre; se nao, troca por outro
     function escolherHora(hora) {
-        setForm(comAgendaSugerida({ ...form, hora_atendimento: hora }));
+        mudarForm(comAgendaSugerida({ ...form, hora_atendimento: hora }));
     }
 
     // ----- Abrir, limpar e salvar -----
@@ -147,21 +156,28 @@ export function useFormularioAtendimento({ atendimentos, animais, servicos, prof
         });
         setEditandoId(atendimento.id);
         setMsg('');
+        setSucesso('');
+        setAviso('');
     }
 
     // Atendimento novo ja com alguns campos preenchidos
-    // (cliente vindo dos inativos, ou data/hora/profissional vindos da Agenda)
-    function novoCom(dados) {
+    // (cliente vindo dos inativos, ou data/hora/profissional vindos da Agenda),
+    // com um aviso dizendo o que falta para registrar
+    function novoCom(dados, avisoTexto = '') {
         const comAnimal = dados.cliente_id ? { animal_id: animalPadrao(dados.cliente_id) } : {};
         setForm({ ...FORM_VAZIO, ...comAnimal, ...dados });
         setEditandoId(null);
         setMsg('');
+        setSucesso('');
+        setAviso(avisoTexto);
     }
 
     function cancelar() {
         setForm(FORM_VAZIO);
         setEditandoId(null);
         setMsg('');
+        setSucesso('');
+        setAviso('');
     }
 
     async function salvar(evento) {
@@ -201,7 +217,12 @@ export function useFormularioAtendimento({ atendimentos, animais, servicos, prof
                 method,
                 body: { cliente_id, animal_id, servico_id, profissional_id, valor, data_atendimento, hora_atendimento, status, observacoes }
             });
+            // Confirmacao: "Atendimento registrado: 10/11/2026 as 09:00 com Marcos Vieira."
+            const [ano, mes, dia] = data_atendimento.split('-');
+            const nomeDoProfissional = profissionais.find((p) => p.id === Number(profissional_id))?.nome;
+            const quando = `${dia}/${mes}/${ano} às ${hora_atendimento} com ${nomeDoProfissional}`;
             cancelar();
+            setSucesso(editandoId ? `Alterações salvas: ${quando}.` : `Atendimento registrado: ${quando}.`);
             recarregar();
         } catch (erro) {
             setMsg(erro.message);
@@ -209,7 +230,7 @@ export function useFormularioAtendimento({ atendimentos, animais, servicos, prof
     }
 
     return {
-        form, editandoId, msg,
+        form, editandoId, msg, sucesso, aviso,
         animaisDoCliente, servicosDoFormulario, horariosDoFormulario, profissionaisDoFormulario,
         alterarCampo, definirCampo, escolherCliente, escolherServico, escolherData, escolherHora,
         editar, novoCom, cancelar, salvar

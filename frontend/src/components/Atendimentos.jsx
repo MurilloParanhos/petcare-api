@@ -30,7 +30,13 @@ function Atendimentos({
         if (paraEditar) {
             formulario.editar(paraEditar);
         } else {
-            formulario.novoCom(dados);
+            const [ano, mes, dia] = dados.data_atendimento.split('-');
+            const profissional = profissionais.find((p) => p.id === dados.profissional_id)?.nome;
+            formulario.novoCom(
+                dados,
+                `Horário escolhido na Agenda: ${dia}/${mes}/${ano} às ${dados.hora_atendimento} com ${profissional}. ` +
+                'Escolha o cliente e o serviço e clique em "Registrar atendimento" para salvar.'
+            );
         }
         subirAoTopo();
         onPreenchido();
@@ -43,7 +49,11 @@ function Atendimentos({
 
     // Botao "Agendar" da lista de inativos: abre o formulario com o cliente escolhido
     function agendar(clienteId) {
-        formulario.novoCom({ cliente_id: clienteId });
+        const nome = inativos.find((c) => c.id === clienteId)?.nome;
+        formulario.novoCom(
+            { cliente_id: clienteId },
+            `Agendando para ${nome}. Escolha o serviço e a data e clique em "Registrar atendimento" para salvar.`
+        );
         setSubAba('atendimentos');
         subirAoTopo();
     }
